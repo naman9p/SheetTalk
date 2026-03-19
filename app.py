@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+import plotly.io as pio
 from openai import OpenAI
 
 # ── Page configuration ──────────────────────────────────────────────
@@ -16,6 +17,109 @@ st.set_page_config(
     },
 )
 
+# ── Professional chart color palette ────────────────────────────────
+CHART_COLORS = [
+    "#374151", "#6b7280", "#9ca3af", "#4b5563",
+    "#1f2937", "#d1d5db", "#111827", "#e5e7eb",
+    "#525252", "#a3a3a3",
+]
+
+CHART_COLORS_EXTENDED = [
+    "#374151", "#6b7280", "#9ca3af", "#4b5563",
+    "#1f2937", "#d1d5db", "#78716c", "#a8a29e",
+    "#57534e", "#44403c",
+]
+
+
+def style_figure(fig):
+    """Apply premium professional styling to any Plotly figure."""
+    fig.update_layout(
+        template="plotly_white",
+        font=dict(
+            family="Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+            size=13,
+            color="#374151",
+        ),
+        title=dict(
+            font=dict(size=16, color="#111827", family="Inter, sans-serif"),
+            x=0,
+            xanchor="left",
+            pad=dict(l=8, t=8),
+        ),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        margin=dict(l=48, r=24, t=56, b=48),
+        legend=dict(
+            font=dict(size=11, color="#6b7280"),
+            bgcolor="rgba(0,0,0,0)",
+            borderwidth=0,
+            orientation="h",
+            yanchor="bottom",
+            y=-0.22,
+            xanchor="center",
+            x=0.5,
+        ),
+        colorway=CHART_COLORS,
+        hoverlabel=dict(
+            bgcolor="#1f2937",
+            font_size=12,
+            font_family="Inter, sans-serif",
+            font_color="#ffffff",
+            bordercolor="#1f2937",
+        ),
+        xaxis=dict(
+            showgrid=False,
+            showline=True,
+            linewidth=1,
+            linecolor="#e5e7eb",
+            tickfont=dict(size=11, color="#9ca3af"),
+            title_font=dict(size=12, color="#6b7280"),
+            zeroline=False,
+        ),
+        yaxis=dict(
+            showgrid=True,
+            gridwidth=1,
+            gridcolor="#f3f4f6",
+            griddash="dot",
+            showline=False,
+            tickfont=dict(size=11, color="#9ca3af"),
+            title_font=dict(size=12, color="#6b7280"),
+            zeroline=False,
+        ),
+        bargap=0.3,
+        bargroupgap=0.1,
+    )
+
+    # Style bars
+    for trace in fig.data:
+        if hasattr(trace, "marker") and trace.type == "bar":
+            trace.marker.line.width = 0
+            trace.marker.cornerradius = 4
+            if not trace.marker.color:
+                trace.marker.color = "#374151"
+            trace.marker.opacity = 0.92
+
+        # Style lines
+        if trace.type == "scatter" and trace.mode and "lines" in trace.mode:
+            trace.line.width = 2.5
+            trace.line.shape = "spline"
+
+        # Style pie
+        if trace.type == "pie":
+            trace.marker.line.width = 2
+            trace.marker.line.color = "#ffffff"
+            trace.textfont = dict(size=11, color="#374151", family="Inter, sans-serif")
+            trace.marker.colors = CHART_COLORS
+
+        # Style histogram
+        if trace.type == "histogram":
+            trace.marker.line.width = 1
+            trace.marker.line.color = "#ffffff"
+            trace.marker.opacity = 0.88
+
+    return fig
+
+
 # ── Custom Font + Premium CSS ───────────────────────────────────────
 st.markdown("""
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,39 +130,41 @@ st.markdown("""
 st.markdown("""
 <style>
 /* ================================================================
-   SHEETTALK — PREMIUM UI STYLESHEET
-   Design System: Quiet Confidence
+   SHEETTALK — GREY PREMIUM UI
+   Design System: Monochrome Confidence
    ================================================================ */
 
-/* ── 0. DESIGN TOKENS ─────────────────────────────────────────── */
 :root {
-    --brand-primary: #1a1a2e;
-    --brand-accent: #6c63ff;
-    --brand-accent-hover: #5a52d5;
-    --brand-accent-light: #f0efff;
-    --brand-accent-glow: rgba(108, 99, 255, 0.15);
+    --brand-primary: #111827;
+    --brand-accent: #374151;
+    --brand-accent-hover: #1f2937;
+    --brand-accent-light: #f3f4f6;
+    --brand-accent-glow: rgba(55, 65, 81, 0.12);
+    --brand-accent-mid: #6b7280;
 
     --bg-primary: #fafafa;
     --bg-surface: #ffffff;
     --bg-subtle: #f9fafb;
     --bg-muted: #f3f4f6;
 
-    --border-default: #e8e8ed;
-    --border-hover: #d1d1d9;
+    --border-default: #e5e7eb;
+    --border-hover: #d1d5db;
+    --border-strong: #9ca3af;
 
-    --text-primary: #1a1a2e;
+    --text-primary: #111827;
     --text-secondary: #6b7280;
     --text-tertiary: #9ca3af;
     --text-inverse: #ffffff;
 
-    --color-success: #10b981;
+    --color-success: #059669;
     --color-success-bg: #ecfdf5;
-    --color-warning: #f59e0b;
+    --color-success-border: rgba(5, 150, 105, 0.2);
+    --color-warning: #d97706;
     --color-warning-bg: #fffbeb;
-    --color-error: #ef4444;
+    --color-error: #dc2626;
     --color-error-bg: #fef2f2;
-    --color-info: #3b82f6;
-    --color-info-bg: #eff6ff;
+    --color-info: #4b5563;
+    --color-info-bg: #f9fafb;
 
     --radius-sm: 6px;
     --radius-md: 8px;
@@ -66,16 +172,16 @@ st.markdown("""
     --radius-xl: 16px;
     --radius-full: 9999px;
 
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.03);
-    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.05), 0 4px 6px rgba(0, 0, 0, 0.02);
+    --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.03);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -4px rgba(0,0,0,0.02);
 
     --transition-fast: 150ms ease;
     --transition-base: 200ms ease;
 }
 
-/* ── 1. GLOBAL RESETS ─────────────────────────────────────────── */
+/* ── 1. GLOBAL ────────────────────────────────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 html, body, [class*="css"] {
@@ -88,7 +194,7 @@ html, body, [class*="css"] {
 }
 
 .main .block-container {
-    max-width: 960px !important;
+    max-width: 940px !important;
     padding-top: 1.5rem !important;
     padding-bottom: 4rem !important;
     padding-left: 2rem !important;
@@ -96,19 +202,19 @@ html, body, [class*="css"] {
 }
 
 header[data-testid="stHeader"] {
-    background: rgba(250, 250, 250, 0.92) !important;
-    backdrop-filter: blur(16px) !important;
-    -webkit-backdrop-filter: blur(16px) !important;
+    background: rgba(250, 250, 250, 0.88) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
     border-bottom: 1px solid var(--border-default) !important;
 }
 
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 
-::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: var(--radius-full); }
-::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: var(--radius-full); }
+::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
 
 /* ── 2. TYPOGRAPHY ────────────────────────────────────────────── */
 h1, h2, h3, h4, h5, h6,
@@ -116,23 +222,23 @@ h1, h2, h3, h4, h5, h6,
     font-family: 'Inter', sans-serif !important;
     color: var(--text-primary) !important;
     font-weight: 700 !important;
-    letter-spacing: -0.025em !important;
+    letter-spacing: -0.03em !important;
     line-height: 1.2 !important;
     margin-top: 0 !important;
 }
 
 h1, .stMarkdown h1 { font-size: 1.875rem !important; margin-bottom: 0.25rem !important; }
-h2, .stMarkdown h2 { font-size: 1.375rem !important; font-weight: 600 !important; margin-bottom: 0.5rem !important; }
-h3, .stMarkdown h3 { font-size: 1.125rem !important; font-weight: 600 !important; margin-bottom: 0.375rem !important; }
+h2, .stMarkdown h2 { font-size: 1.375rem !important; font-weight: 600 !important; }
+h3, .stMarkdown h3 { font-size: 1.125rem !important; font-weight: 600 !important; }
 
 p, .stMarkdown p, .stText {
     font-size: 0.9375rem !important;
-    line-height: 1.6 !important;
+    line-height: 1.65 !important;
     color: var(--text-secondary) !important;
 }
 
 a { color: var(--brand-accent) !important; text-decoration: none !important; transition: color var(--transition-fast) !important; }
-a:hover { color: var(--brand-accent-hover) !important; }
+a:hover { color: var(--brand-primary) !important; text-decoration: underline !important; }
 
 /* ── 3. SIDEBAR ───────────────────────────────────────────────── */
 [data-testid="stSidebar"] {
@@ -158,14 +264,14 @@ a:hover { color: var(--brand-accent-hover) !important; }
     text-transform: uppercase !important;
     letter-spacing: 0.07em !important;
     color: var(--text-tertiary) !important;
-    margin-top: 0.75rem !important;
+    margin-top: 0.5rem !important;
     margin-bottom: 0.5rem !important;
 }
 
 [data-testid="stSidebar"] hr {
     border: none !important;
     border-top: 1px solid var(--border-default) !important;
-    margin: 1rem 0 !important;
+    margin: 0.875rem 0 !important;
 }
 
 [data-testid="stSidebar"] .stExpander {
@@ -177,7 +283,7 @@ a:hover { color: var(--brand-accent-hover) !important; }
 /* ── 4. BUTTONS ───────────────────────────────────────────────── */
 .stButton > button[kind="primary"],
 .stButton > button[data-testid="baseButton-primary"] {
-    background-color: var(--brand-accent) !important;
+    background-color: var(--brand-primary) !important;
     color: var(--text-inverse) !important;
     border: none !important;
     border-radius: var(--radius-md) !important;
@@ -185,16 +291,16 @@ a:hover { color: var(--brand-accent-hover) !important; }
     font-family: 'Inter', sans-serif !important;
     font-size: 0.875rem !important;
     font-weight: 600 !important;
-    letter-spacing: 0.01em !important;
-    box-shadow: 0 1px 3px rgba(108, 99, 255, 0.3) !important;
+    letter-spacing: -0.01em !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 1px 1px rgba(0,0,0,0.04) !important;
     transition: all var(--transition-base) !important;
     line-height: 1.5 !important;
 }
 
 .stButton > button[kind="primary"]:hover,
 .stButton > button[data-testid="baseButton-primary"]:hover {
-    background-color: var(--brand-accent-hover) !important;
-    box-shadow: 0 4px 12px rgba(108, 99, 255, 0.35) !important;
+    background-color: #000000 !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.06) !important;
     transform: translateY(-1px) !important;
 }
 
@@ -203,11 +309,11 @@ a:hover { color: var(--brand-accent-hover) !important; }
 .stButton > button {
     background-color: var(--bg-surface) !important;
     color: var(--text-primary) !important;
-    border: 1.5px solid var(--border-default) !important;
+    border: 1px solid var(--border-default) !important;
     border-radius: var(--radius-md) !important;
     padding: 0.625rem 1.5rem !important;
     font-family: 'Inter', sans-serif !important;
-    font-size: 0.875rem !important;
+    font-size: 0.8125rem !important;
     font-weight: 500 !important;
     box-shadow: var(--shadow-xs) !important;
     transition: all var(--transition-base) !important;
@@ -224,7 +330,7 @@ a:hover { color: var(--brand-accent-hover) !important; }
 .stDownloadButton > button {
     background-color: var(--bg-surface) !important;
     color: var(--text-primary) !important;
-    border: 1.5px solid var(--border-default) !important;
+    border: 1px solid var(--border-default) !important;
     border-radius: var(--radius-md) !important;
     font-family: 'Inter', sans-serif !important;
     font-size: 0.8125rem !important;
@@ -234,14 +340,13 @@ a:hover { color: var(--brand-accent-hover) !important; }
 
 .stDownloadButton > button:hover {
     border-color: var(--brand-accent) !important;
-    color: var(--brand-accent) !important;
     background-color: var(--brand-accent-light) !important;
 }
 
 /* ── 5. FORM INPUTS ───────────────────────────────────────────── */
 .stTextInput > div > div > input {
     background-color: var(--bg-surface) !important;
-    border: 1.5px solid var(--border-default) !important;
+    border: 1px solid var(--border-default) !important;
     border-radius: var(--radius-md) !important;
     padding: 0.625rem 0.875rem !important;
     font-family: 'Inter', sans-serif !important;
@@ -260,7 +365,7 @@ a:hover { color: var(--brand-accent-hover) !important; }
 
 .stTextArea > div > div > textarea {
     background-color: var(--bg-surface) !important;
-    border: 1.5px solid var(--border-default) !important;
+    border: 1px solid var(--border-default) !important;
     border-radius: var(--radius-md) !important;
     padding: 0.625rem 0.875rem !important;
     font-family: 'Inter', sans-serif !important;
@@ -276,7 +381,7 @@ a:hover { color: var(--brand-accent-hover) !important; }
 
 .stSelectbox > div > div {
     background-color: var(--bg-surface) !important;
-    border: 1.5px solid var(--border-default) !important;
+    border: 1px solid var(--border-default) !important;
     border-radius: var(--radius-md) !important;
     transition: all var(--transition-base) !important;
 }
@@ -288,7 +393,6 @@ a:hover { color: var(--brand-accent-hover) !important; }
     box-shadow: 0 0 0 3px var(--brand-accent-glow) !important;
 }
 
-/* Input labels */
 .stTextInput > label,
 .stTextArea > label,
 .stSelectbox > label,
@@ -297,7 +401,7 @@ a:hover { color: var(--brand-accent-hover) !important; }
     font-family: 'Inter', sans-serif !important;
     font-size: 0.75rem !important;
     font-weight: 600 !important;
-    color: #374151 !important;
+    color: var(--text-secondary) !important;
     letter-spacing: 0.01em !important;
     margin-bottom: 0.25rem !important;
 }
@@ -305,7 +409,7 @@ a:hover { color: var(--brand-accent-hover) !important; }
 /* ── 6. FILE UPLOADER ─────────────────────────────────────────── */
 [data-testid="stFileUploader"] {
     background-color: var(--bg-subtle) !important;
-    border: 2px dashed var(--border-default) !important;
+    border: 1.5px dashed var(--border-hover) !important;
     border-radius: var(--radius-lg) !important;
     padding: 1.25rem !important;
     transition: all var(--transition-base) !important;
@@ -313,11 +417,11 @@ a:hover { color: var(--brand-accent-hover) !important; }
 
 [data-testid="stFileUploader"]:hover {
     border-color: var(--brand-accent) !important;
-    background-color: rgba(108, 99, 255, 0.02) !important;
+    background-color: var(--brand-accent-light) !important;
 }
 
 [data-testid="stFileUploader"] section > button {
-    background-color: var(--brand-accent) !important;
+    background-color: var(--brand-primary) !important;
     color: var(--text-inverse) !important;
     border: none !important;
     border-radius: var(--radius-md) !important;
@@ -341,7 +445,7 @@ a:hover { color: var(--brand-accent-hover) !important; }
     font-family: 'Inter', sans-serif !important;
     font-size: 0.8125rem !important;
     font-weight: 500 !important;
-    color: var(--text-secondary) !important;
+    color: var(--text-tertiary) !important;
     padding: 0.625rem 1rem !important;
     border: none !important;
     background-color: transparent !important;
@@ -353,13 +457,13 @@ a:hover { color: var(--brand-accent-hover) !important; }
 .stTabs [data-baseweb="tab"]:hover { color: var(--text-primary) !important; }
 
 .stTabs [aria-selected="true"] {
-    color: var(--brand-accent) !important;
+    color: var(--text-primary) !important;
     font-weight: 600 !important;
-    border-bottom: 2px solid var(--brand-accent) !important;
+    border-bottom: 2px solid var(--brand-primary) !important;
 }
 
 .stTabs [data-baseweb="tab-highlight"] {
-    background-color: var(--brand-accent) !important;
+    background-color: var(--brand-primary) !important;
     height: 2px !important;
 }
 
@@ -427,13 +531,10 @@ a:hover { color: var(--brand-accent-hover) !important; }
 }
 
 /* ── 11. ALERTS ───────────────────────────────────────────────── */
-.stSuccess, div[data-testid="stAlert"] div[role="alert"][data-baseweb="notification"] {
-    border-radius: var(--radius-md) !important;
-    font-size: 0.8125rem !important;
-}
-
 [data-testid="stAlert"] {
     border-radius: var(--radius-md) !important;
+    font-size: 0.8125rem !important;
+    border-left: 3px solid var(--border-strong) !important;
 }
 
 /* ── 12. PROGRESS & SPINNER ───────────────────────────────────── */
@@ -445,39 +546,27 @@ a:hover { color: var(--brand-accent-hover) !important; }
 .stProgress > div > div {
     background-color: var(--bg-muted) !important;
     border-radius: var(--radius-full) !important;
-    height: 5px !important;
+    height: 4px !important;
 }
 
 /* ── 13. CHAT INTERFACE ───────────────────────────────────────── */
-.stChatMessage {
-    border-radius: var(--radius-lg) !important;
-    margin-bottom: 0.75rem !important;
-    padding: 1rem 1.25rem !important;
-    border: 1px solid var(--border-default) !important;
-    background: var(--bg-surface) !important;
-    box-shadow: var(--shadow-xs) !important;
-}
-
 [data-testid="stChatMessage"] {
     border-radius: var(--radius-lg) !important;
     border: 1px solid var(--border-default) !important;
     background: var(--bg-surface) !important;
     box-shadow: var(--shadow-xs) !important;
     padding: 1rem 1.25rem !important;
-    margin-bottom: 0.75rem !important;
-}
-
-[data-testid="stChatInput"] {
-    border-radius: var(--radius-lg) !important;
+    margin-bottom: 0.625rem !important;
 }
 
 [data-testid="stChatInput"] textarea {
     font-family: 'Inter', sans-serif !important;
     font-size: 0.9375rem !important;
     border-radius: var(--radius-lg) !important;
-    border: 1.5px solid var(--border-default) !important;
+    border: 1px solid var(--border-default) !important;
     padding: 0.75rem 1rem !important;
     background: var(--bg-surface) !important;
+    color: var(--text-primary) !important;
 }
 
 [data-testid="stChatInput"] textarea:focus {
@@ -486,21 +575,21 @@ a:hover { color: var(--brand-accent-hover) !important; }
 }
 
 [data-testid="stChatInput"] button {
-    background-color: var(--brand-accent) !important;
+    background-color: var(--brand-primary) !important;
     border-radius: var(--radius-md) !important;
     color: var(--text-inverse) !important;
 }
 
 [data-testid="stChatInput"] button:hover {
-    background-color: var(--brand-accent-hover) !important;
+    background-color: #000000 !important;
 }
 
-/* ── 14. PLOTLY CHART CONTAINER ───────────────────────────────── */
+/* ── 14. PLOTLY CHART ─────────────────────────────────────────── */
 [data-testid="stPlotlyChart"], .stPlotlyChart {
     background: var(--bg-surface) !important;
     border: 1px solid var(--border-default) !important;
     border-radius: var(--radius-lg) !important;
-    padding: 0.5rem !important;
+    padding: 0.75rem !important;
     box-shadow: var(--shadow-xs) !important;
     overflow: hidden !important;
 }
@@ -513,7 +602,7 @@ div[data-testid="stCodeBlock"] {
 }
 
 code {
-    font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace !important;
+    font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace !important;
     font-size: 0.8125rem !important;
 }
 
@@ -524,11 +613,11 @@ hr, .stMarkdown hr {
     margin: 1.5rem 0 !important;
 }
 
-/* ── 17. CUSTOM COMPONENT CLASSES ─────────────────────────────── */
+/* ── 17. CUSTOM COMPONENTS ────────────────────────────────────── */
 .hero-section {
     text-align: center;
     padding: 2.5rem 0 1.5rem;
-    max-width: 600px;
+    max-width: 580px;
     margin: 0 auto;
     animation: fadeIn 0.5s ease-out;
 }
@@ -543,9 +632,10 @@ hr, .stMarkdown hr {
     font-size: 0.6875rem;
     font-weight: 600;
     border-radius: var(--radius-full);
-    letter-spacing: 0.03em;
+    letter-spacing: 0.02em;
     text-transform: uppercase;
     margin-bottom: 1.25rem;
+    border: 1px solid var(--border-default);
 }
 
 .hero-title {
@@ -553,8 +643,8 @@ hr, .stMarkdown hr {
     font-size: 2.25rem !important;
     font-weight: 700 !important;
     color: var(--text-primary) !important;
-    letter-spacing: -0.03em !important;
-    line-height: 1.15 !important;
+    letter-spacing: -0.035em !important;
+    line-height: 1.12 !important;
     margin-bottom: 0.75rem !important;
     margin-top: 0 !important;
 }
@@ -564,7 +654,7 @@ hr, .stMarkdown hr {
     color: var(--text-secondary) !important;
     line-height: 1.6 !important;
     margin-bottom: 0 !important;
-    max-width: 480px;
+    max-width: 460px;
     margin-left: auto;
     margin-right: auto;
 }
@@ -575,9 +665,10 @@ hr, .stMarkdown hr {
     justify-content: center;
     gap: 0.5rem;
     padding: 0.625rem 0;
-    font-size: 0.75rem;
+    font-size: 0.6875rem;
     color: var(--text-tertiary);
     margin-top: 0.75rem;
+    letter-spacing: 0.01em;
 }
 
 .sidebar-logo {
@@ -595,12 +686,12 @@ hr, .stMarkdown hr {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
     border-radius: var(--radius-md);
-    background: linear-gradient(135deg, #6c63ff 0%, #8b83ff 100%);
-    font-size: 1.125rem;
-    box-shadow: 0 2px 8px rgba(108, 99, 255, 0.25);
+    background: var(--brand-primary);
+    font-size: 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
 }
 
 .logo-text-group {
@@ -609,18 +700,18 @@ hr, .stMarkdown hr {
 }
 
 .logo-text {
-    font-size: 1.0625rem;
+    font-size: 1rem;
     font-weight: 700;
     color: var(--text-primary);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
     line-height: 1.2;
 }
 
 .logo-tag {
-    font-size: 0.625rem;
+    font-size: 0.5625rem;
     font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     color: var(--text-tertiary);
     margin-top: 0.0625rem;
 }
@@ -644,27 +735,22 @@ hr, .stMarkdown hr {
 
 .sidebar-footer {
     padding-top: 0.75rem;
-    font-size: 0.6875rem;
+    font-size: 0.625rem;
     color: var(--text-tertiary);
     text-align: center;
+    letter-spacing: 0.01em;
 }
 
-.sidebar-footer a {
-    color: var(--text-tertiary) !important;
-    font-weight: 500;
-}
-
-.sidebar-footer a:hover {
-    color: var(--brand-accent) !important;
-}
+.sidebar-footer a { color: var(--text-tertiary) !important; font-weight: 500; }
+.sidebar-footer a:hover { color: var(--text-primary) !important; }
 
 .status-badge {
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
-    padding: 0.375rem 0.75rem;
+    padding: 0.3rem 0.75rem;
     border-radius: var(--radius-full);
-    font-size: 0.6875rem;
+    font-size: 0.625rem;
     font-weight: 600;
     letter-spacing: 0.01em;
 }
@@ -672,7 +758,7 @@ hr, .stMarkdown hr {
 .status-connected {
     background: var(--color-success-bg);
     color: #065f46;
-    border: 1px solid rgba(16, 185, 129, 0.2);
+    border: 1px solid var(--color-success-border);
 }
 
 .status-waiting {
@@ -692,6 +778,7 @@ hr, .stMarkdown hr {
     font-weight: 600;
     border-radius: var(--radius-full);
     letter-spacing: 0.02em;
+    border: 1px solid var(--border-default);
 }
 
 .onboarding-card {
@@ -701,15 +788,16 @@ hr, .stMarkdown hr {
     padding: 2.5rem 2rem;
     text-align: center;
     box-shadow: var(--shadow-sm);
-    max-width: 520px;
+    max-width: 500px;
     margin: 0 auto;
     animation: fadeIn 0.5s ease-out;
 }
 
 .onboarding-icon {
-    font-size: 2.5rem;
+    font-size: 2rem;
     margin-bottom: 1.25rem;
     display: block;
+    opacity: 0.8;
 }
 
 .onboarding-title {
@@ -717,7 +805,7 @@ hr, .stMarkdown hr {
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--text-primary);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
     margin-bottom: 0.5rem;
 }
 
@@ -742,7 +830,7 @@ hr, .stMarkdown hr {
     padding: 0 !important;
     font-size: 0.8125rem !important;
     color: var(--text-secondary) !important;
-    line-height: 1.8 !important;
+    line-height: 1.85 !important;
 }
 
 .onboarding-steps strong {
@@ -765,7 +853,7 @@ hr, .stMarkdown hr {
     background: var(--bg-subtle);
     border: 1px solid var(--border-default);
     border-radius: var(--radius-md);
-    font-size: 0.75rem;
+    font-size: 0.6875rem;
     color: var(--text-secondary);
     transition: all var(--transition-fast);
     cursor: default;
@@ -774,11 +862,11 @@ hr, .stMarkdown hr {
 .example-chip:hover {
     border-color: var(--brand-accent);
     background: var(--brand-accent-light);
-    color: var(--brand-accent);
+    color: var(--text-primary);
 }
 
 .example-icon {
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     flex-shrink: 0;
 }
 
@@ -787,15 +875,19 @@ hr, .stMarkdown hr {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    padding: 0.75rem 1rem;
-    background: var(--color-success-bg);
-    border: 1px solid rgba(16, 185, 129, 0.15);
+    padding: 0.625rem 1rem;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-default);
     border-radius: var(--radius-lg);
     margin-bottom: 1rem;
-    font-size: 0.8125rem;
-    color: #065f46;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
     font-weight: 500;
     animation: fadeIn 0.4s ease-out;
+}
+
+.chat-ready-banner strong {
+    color: var(--text-primary);
 }
 
 .app-footer {
@@ -809,25 +901,18 @@ hr, .stMarkdown hr {
     font-size: 0.8125rem;
     font-weight: 600;
     color: var(--text-primary);
+    letter-spacing: -0.02em;
     margin-bottom: 0.125rem;
 }
 
 .footer-tagline {
-    font-size: 0.75rem;
+    font-size: 0.6875rem;
     color: var(--text-tertiary);
     margin-bottom: 0.625rem;
 }
 
-.footer-links {
-    font-size: 0.6875rem;
-    margin-bottom: 0.5rem;
-}
-
-.footer-links a {
-    color: var(--text-secondary) !important;
-    transition: color var(--transition-fast) !important;
-}
-
+.footer-links { font-size: 0.6875rem; margin-bottom: 0.5rem; }
+.footer-links a { color: var(--text-secondary) !important; text-decoration: none !important; }
 .footer-links a:hover { color: var(--text-primary) !important; }
 
 .footer-dot {
@@ -836,19 +921,16 @@ hr, .stMarkdown hr {
 }
 
 .footer-copyright {
-    font-size: 0.625rem;
+    font-size: 0.5625rem;
     color: var(--text-tertiary);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
 }
 
 /* ── 18. ANIMATIONS ───────────────────────────────────────────── */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
+    from { opacity: 0; transform: translateY(6px); }
     to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
 }
 
 /* ── 19. RESPONSIVE ───────────────────────────────────────────── */
@@ -857,7 +939,6 @@ hr, .stMarkdown hr {
         padding-left: 1rem !important;
         padding-right: 1rem !important;
     }
-
     .hero-title { font-size: 1.625rem !important; }
     .hero-subtitle { font-size: 0.875rem !important; }
     .hero-section { padding: 1.5rem 0 1rem; }
@@ -882,7 +963,6 @@ if "api_key_set" not in st.session_state:
 
 # ── Sidebar ─────────────────────────────────────────────────────────
 with st.sidebar:
-    # Logo
     st.markdown("""
         <div class="sidebar-logo">
             <div class="logo-mark">
@@ -897,7 +977,6 @@ with st.sidebar:
 
     st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
 
-    # Connection section
     st.markdown('<p class="sidebar-section-label">Connection</p>', unsafe_allow_html=True)
 
     api_key = st.text_input("NVIDIA API Key", type="password", placeholder="nvapi-…", label_visibility="collapsed")
@@ -919,14 +998,13 @@ with st.sidebar:
             api_key=api_key,
         )
         st.session_state.client = client
-        st.markdown('<div class="status-badge status-connected">● API Connected</div>', unsafe_allow_html=True)
+        st.markdown('<div class="status-badge status-connected">● Connected</div>', unsafe_allow_html=True)
     else:
         st.session_state.api_key_set = False
-        st.markdown('<div class="status-badge status-waiting">○ Awaiting API Key</div>', unsafe_allow_html=True)
+        st.markdown('<div class="status-badge status-waiting">○ Awaiting key</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
 
-    # Data section
     st.markdown('<p class="sidebar-section-label">Data Source</p>', unsafe_allow_html=True)
 
     uploaded_file = st.file_uploader("Upload CSV", type=["csv"], key="csv_upload", label_visibility="collapsed")
@@ -946,7 +1024,7 @@ with st.sidebar:
             unsafe_allow_html=True,
         )
 
-        with st.expander("Preview Data", expanded=False):
+        with st.expander("Preview data", expanded=False):
             st.dataframe(st.session_state.df.head(10), use_container_width=True)
             st.caption(
                 f"**{st.session_state.df.shape[0]}** rows × "
@@ -955,32 +1033,29 @@ with st.sidebar:
 
     st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
 
-    # Actions
     if st.button("Clear conversation", use_container_width=True):
         st.session_state.chat_history = []
         st.rerun()
 
-    # Sidebar footer
     st.markdown("""
         <div class="sidebar-footer">
-            <span>v1.0</span> · <a href="#">Documentation</a>
+            <span>v1.0</span> · <a href="#">Docs</a>
         </div>
     """, unsafe_allow_html=True)
 
 
 # ── Main ────────────────────────────────────────────────────────────
 
-# Hero Section
 st.markdown("""
     <div class="hero-section">
-        <div class="hero-badge">⚡ AI-Powered Analysis</div>
+        <div class="hero-badge">◆ AI-Powered Analysis</div>
         <h1 class="hero-title">Chat with your data.</h1>
         <p class="hero-subtitle">
-            Upload a CSV, ask questions in plain English, and get instant
-            insights with AI-generated analysis and visualizations.
+            Upload a CSV, ask questions in plain English, and get
+            instant insights with visualizations.
         </p>
         <div class="trust-signal">
-            🔒 Your data stays in your session · Never stored on servers
+            🔒 Data stays in your session · Never stored
         </div>
     </div>
 """, unsafe_allow_html=True)
@@ -988,13 +1063,11 @@ st.markdown("""
 
 # ── Helper: extract executable code ────────────────────────────────
 def extract_code(raw: str) -> str:
-    """Strip markdown fences, imports, and comments. Return clean code."""
     if not raw or not raw.strip():
         raise ValueError("LLM returned an empty response")
 
     code = raw.strip()
 
-    # ── Remove markdown code fences ──
     if "```" in code:
         parts = code.split("```")
         code_blocks = []
@@ -1009,7 +1082,6 @@ def extract_code(raw: str) -> str:
         if code_blocks:
             code = "\n".join(code_blocks).strip()
 
-    # ── Filter lines ──
     lines = []
     for line in code.split("\n"):
         stripped = line.strip()
@@ -1121,6 +1193,8 @@ Do NOT import anything. Just use them directly.
 ━━━━━━━━━━━━━━━━━━━━━━━
 - Use plotly.express as px (already imported)
 - Charts must look clean, modern, and professional
+- Use template='plotly_white' always
+- Use a monochromatic grey palette: ['#374151', '#6b7280', '#9ca3af', '#4b5563', '#1f2937', '#d1d5db']
 
 AUTO-SELECT chart type:
 - Comparison → px.bar
@@ -1131,10 +1205,12 @@ AUTO-SELECT chart type:
 RULES:
 - Always sort values before plotting
 - Limit to top 10 categories if too many values
-- Add proper title
+- Add proper title using title='...'
 - Use clear axis labels
 - Avoid clutter
-- Use template='plotly_white'
+- For bar charts, use color_discrete_sequence=['#374151']
+- For line charts, use color_discrete_sequence=['#374151']
+- For pie charts, use color_discrete_sequence=['#374151', '#6b7280', '#9ca3af', '#4b5563', '#1f2937', '#d1d5db']
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 🧠 DATA HANDLING RULES
@@ -1180,7 +1256,6 @@ if st.session_state.api_key_set and st.session_state.df is not None:
 
     df = st.session_state.df
 
-    # Ready banner
     st.markdown(f"""
         <div class="chat-ready-banner">
             ✓ Ready — analyzing <strong>{st.session_state.get("file_name", "your file")}</strong>
@@ -1207,7 +1282,8 @@ if st.session_state.api_key_set and st.session_state.df is not None:
                 else:
                     st.write(result_val)
             if "fig" in msg and msg["fig"] is not None:
-                st.plotly_chart(msg["fig"], use_container_width=True)
+                styled_fig = style_figure(msg["fig"])
+                st.plotly_chart(styled_fig, use_container_width=True)
             if "chart" in msg and msg["chart"] is not None:
                 try:
                     st.bar_chart(msg["chart"])
@@ -1311,24 +1387,24 @@ elif st.session_state.df is None:
                 with natural language queries.
             </div>
             <div style="margin-top: 0.25rem; margin-bottom: 0.5rem;">
-                <p class="sidebar-section-label" style="text-align:center; margin-bottom: 0.75rem !important;">Example questions you can ask</p>
+                <p class="sidebar-section-label" style="text-align:center; margin-bottom: 0.75rem !important;">Example questions</p>
             </div>
             <div class="examples-grid">
                 <div class="example-chip">
                     <span class="example-icon">📊</span>
-                    Show me sales by region
+                    Sales by region
                 </div>
                 <div class="example-chip">
                     <span class="example-icon">📈</span>
-                    What's the trend over time?
+                    Trend over time
                 </div>
                 <div class="example-chip">
                     <span class="example-icon">🔢</span>
-                    Average revenue per category
+                    Average revenue
                 </div>
                 <div class="example-chip">
                     <span class="example-icon">🏆</span>
-                    Top 10 customers by spend
+                    Top 10 customers
                 </div>
             </div>
         </div>
