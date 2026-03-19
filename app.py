@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
-import numpy as np                          # ← moved to top-level
+import numpy as np
+import plotly.express as px                          # ← NEW: Plotly support
 from openai import OpenAI
 
 # ── Page configuration ──────────────────────────────────────────────
@@ -10,6 +11,15 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# ── Custom CSS for polish ───────────────────────────────────────────
+st.markdown("""
+<style>
+    .stChatMessage { border-radius: 12px; margin-bottom: 1rem; }
+    div[data-testid="stCodeBlock"] { border-radius: 8px; }
+    .stPlotlyChart { border-radius: 10px; overflow: hidden; }
+</style>
+""", unsafe_allow_html=True)
 
 # ── Session state ───────────────────────────────────────────────────
 if "chat_history" not in st.session_state:
@@ -44,15 +54,14 @@ with st.sidebar:
         st.session_state.client = client
         st.success("✅ NVIDIA API Connected")
     else:
-        st.session_state.api_key_set = False          # ← reset when key removed
+        st.session_state.api_key_set = False
         st.info("Enter your NVIDIA API key")
 
     st.markdown("---")
 
-    uploaded_file = st.file_uploader("Upload CSV", type=["csv"], key="csv_upload")
+    uploaded_file = st.file_uploader("📂 Upload CSV", type=["csv"], key="csv_upload")
 
     if uploaded_file is not None:
-        # Only re-read when the file actually changes
         if (
             st.session_state.df is None
             or st.session_state.get("file_name") != uploaded_file.name
@@ -60,43 +69,70 @@ with st.sidebar:
             df = pd.read_csv(uploaded_file)
             st.session_state.df = df
             st.session_state.file_name = uploaded_file.name
-            st.session_state.chat_history = []        # ← reset chat for new file
-        st.success(f"Loaded: {uploaded_file.name}")
+            st.session_state.chat_history = []
+        st.success(f"✅ Loaded: {uploaded_file.name}")
+
+        # Show quick preview
+        with st.expander("👀 Preview Data"):
+            st.dataframe(st.session_state.df.head(10), use_container_width=True)
+            st.caption(
+                f"**{st.session_state.df.shape[0]}** rows × "
+                f"**{st.session_state.df.shape[1]}** columns"
+            )
+
+    st.markdown("---")
+
+    # Clear chat button
+    if st.button("🗑️ Clear Chat", use_container_width=True):
+        st.session_state.chat_history = []
+        st.rerun()
 
 # ── Main ────────────────────────────────────────────────────────────
 st.title("💬 SheetTalk")
-st.caption("Chat with your CSV using NVIDIA AI")
+st.caption("Chat with your CSV using NVIDIA AI • Powered by Plotly visualizations")
 
 
 # ── Helper: extract executable code from LLM response ──────────────
 def extract_code(raw: str) -> str:
     """
-    Strip markdown fences, blank lines and comments,
-    then return all lines that look like executable pandas code.
-    Falls back to the last non-empty line.
+    Strip markdown fences, blank lines, and stray comments.
+    Returns all executable lines joined together.
     """
-    code = raw.replace("```python", "").replace("```", "").strip()
-    lines = [
-        l.strip()
-        for l in code.split("\n")
-        if l.strip() and not l.strip().startswith("#")
-    ]
+    if not raw or not raw.strip():
+        raise ValueError("LLM returned an empty response")
+
+    code = raw.strip()
+
+    # Remove markdown code fences
+    if "```" in code:
+        parts = code.split("```")
+        code_blocks = []
+        for i, part in enumerate(parts):
+            if i % 2 == 1:  # inside a fence
+                # Strip optional language tag on first line
+                lines = part.split("\n")
+                if lines and lines[0].strip().lower() in (
+                    "python", "py", "python3", ""
+                ):
+                    lines = lines[1:]
+                code_blocks.append("\n".join(lines))
+        if code_blocks:
+            code = "\n".join(code_blocks).strip()
+
+    # Remove comment-only lines but keep inline comments
+    lines = []
+    for line in code.split("\n"):
+        stripped = line.strip()
+        if stripped and not stripped.startswith("#"):
+            lines.append(line)  # preserve original indentation
 
     if not lines:
-        raise ValueError("LLM returned empty code")
+        raise ValueError("LLM returned only comments / empty code")
 
-    # Keep every line that references `df` or is an assignment to a var used later
-    df_lines = [l for l in lines if "df" in l]
-
-    # If there's exactly one expression → return it;
-    # otherwise join with newlines so multi-step code still works.
-    if df_lines:
-        return "\n".join(df_lines)
-
-    return lines[-1]
+    return "\n".join(lines)
 
 
-# ── Safe builtins whitelist for eval / exec ─────────────────────────
+# ── Safe builtins whitelist ─────────────────────────────────────────
 SAFE_BUILTINS = {
     "len": len,
     "sum": sum,
@@ -127,64 +163,127 @@ SAFE_BUILTINS = {
 }
 
 
-def safe_execute(code: str, df: pd.DataFrame):
+def safe_execute(code: str, df: pd.DataFrame) -> dict:
     """
-    Execute pandas code and return the result.
-    • Single expressions  → eval()
-    • Multi-line / assignments → exec(), then return the last variable.
+    Execute pandas/plotly code and return a dict with:
+      - 'result': the computed data
+      - 'fig':    a Plotly figure (or None)
     """
-    global_ns = {"__builtins__": SAFE_BUILTINS, "df": df, "pd": pd, "np": np}
+    global_ns = {
+        "__builtins__": SAFE_BUILTINS,
+        "df": df.copy(),          # protect original df
+        "pd": pd,
+        "np": np,
+        "px": px,                 # ← Plotly express available
+    }
 
-    # Single expression → eval is fine
-    if "\n" not in code and "=" not in code.split("#")[0]:
-        return eval(code, global_ns)
-
-    # Multi-line or assignment → use exec, capture the last assigned var
     local_ns: dict = {}
+
+    # Try eval first for single expressions with no assignment
+    is_single_expr = (
+        "\n" not in code.strip()
+        and "=" not in code.split("#")[0]
+        and "import" not in code
+    )
+
+    if is_single_expr:
+        try:
+            result = eval(code, global_ns)
+            return {"result": result, "fig": None}
+        except SyntaxError:
+            pass  # fall through to exec
+
+    # Multi-line or assignment → exec
     exec(code, global_ns, local_ns)
 
-    # Return `result` if the code assigned one, else the last local
-    if "result" in local_ns:
-        return local_ns["result"]
-    if local_ns:
-        return list(local_ns.values())[-1]
-    return global_ns.get("df", df)
+    # Extract result
+    result = local_ns.get("result", None)
+    if result is None:
+        # Fallback: last assigned variable (skip fig)
+        non_fig = {k: v for k, v in local_ns.items() if k != "fig"}
+        if non_fig:
+            result = list(non_fig.values())[-1]
+
+    # Extract figure
+    fig = local_ns.get("fig", None)
+
+    return {"result": result, "fig": fig}
 
 
-# ── Chat loop ──────────────────────────────────────────────────────
-if st.session_state.api_key_set and st.session_state.df is not None:
+# ── Build the advanced system prompt ───────────────────────────────
+def build_system_prompt() -> str:
+    return """You are a world-class Python data analyst, visualization expert, and product-grade AI assistant.
 
-    df = st.session_state.df
+You are working inside a Streamlit app where:
+- The dataset is already loaded as a pandas DataFrame named `df`
+- Your job is to analyze data and generate insights
 
-    # Show history
-    for msg in st.session_state.chat_history:
-        with st.chat_message(msg["role"]):
-            if "content" in msg:
-                st.markdown(msg["content"])
-            if "code" in msg:
-                st.code(msg["code"], language="python")
-            if "result" in msg:
-                st.write(msg["result"])
-            if "chart" in msg:
-                try:
-                    st.bar_chart(msg["chart"])
-                except Exception:
-                    pass                              # skip chart if it can't render
+━━━━━━━━━━━━━━━━━━━━━━━
+🎯 YOUR OBJECTIVE
+━━━━━━━━━━━━━━━━━━━━━━━
+1. Understand the user's question
+2. Perform accurate data analysis using pandas/numpy
+3. Return clean, meaningful results
+4. Create a beautiful Plotly visualization when useful
 
-    # User input
-    if prompt := st.chat_input("Ask about your data..."):
+━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ STRICT OUTPUT RULES
+━━━━━━━━━━━━━━━━━━━━━━━
+- Return ONLY executable Python code
+- NO explanations
+- NO markdown
+- NO comments
+- ALWAYS use the variable `df`
+- Final output MUST be stored in: result
+- If visualization is useful, ALSO create: fig
 
-        st.session_state.chat_history.append(
-            {"role": "user", "content": prompt}
-        )
+━━━━━━━━━━━━━━━━━━━━━━━
+📊 VISUALIZATION RULES
+━━━━━━━━━━━━━━━━━━━━━━━
+- Use plotly.express as px (already imported)
+- Charts must look clean, modern, and professional
 
-        sample = df.head(5).to_string()
-        dtypes = df.dtypes.to_string()
+AUTO-SELECT chart type:
+- Comparison → px.bar
+- Trends/time → px.line
+- Distribution → px.histogram
+- Proportions → px.pie
 
-        full_prompt = f"""
-You are a strict Python data analyst.
+RULES:
+- Always sort values before plotting
+- Limit to top 10 categories if too many values
+- Add proper title
+- Use clear axis labels
+- Avoid clutter
+- Use template='plotly_white'
 
-DataFrame: df
+━━━━━━━━━━━━━━━━━━━━━━━
+🧠 DATA HANDLING RULES
+━━━━━━━━━━━━━━━━━━━━━━━
+- Handle missing values if needed
+- Use groupby for aggregations
+- Use meaningful column names
+- Round numbers when necessary
+- Return clean outputs (not raw messy data)
+
+━━━━━━━━━━━━━━━━━━━━━━━
+💬 OUTPUT FORMAT
+━━━━━━━━━━━━━━━━━━━━━━━
+- The result should feel clean and readable
+- Avoid returning huge raw tables
+- Prefer summaries, grouped data, or key insights
+- Always assign final answer to `result`
+- Always assign plotly figure to `fig` (when a chart is created)"""
+
+
+def build_user_prompt(question: str, df: pd.DataFrame) -> str:
+    dtypes = df.dtypes.to_string()
+    sample = df.head(5).to_string()
+    shape = f"{df.shape[0]} rows × {df.shape[1]} columns"
+
+    return f"""
+📂 DATA CONTEXT
+Shape: {shape}
 
 Columns and types:
 {dtypes}
@@ -192,15 +291,41 @@ Columns and types:
 Sample rows:
 {sample}
 
-RULES:
-- Only return pandas / numpy code
-- Must use the variable `df`
-- No explanation, no markdown, no comments
-- If the answer needs more than one line, assign the final answer to `result`
-
-Question:
-{prompt}
+━━━━━━━━━━━━━━━━━━━━━━━
+Question: {question}
 """
+
+
+# ── Chat loop ──────────────────────────────────────────────────────
+if st.session_state.api_key_set and st.session_state.df is not None:
+
+    df = st.session_state.df
+
+    # ── Show chat history ──
+    for msg in st.session_state.chat_history:
+        with st.chat_message(msg["role"]):
+            if "content" in msg:
+                st.markdown(msg["content"])
+            if "code" in msg:
+                with st.expander("🔍 View Code", expanded=False):
+                    st.code(msg["code"], language="python")
+            if "result" in msg and msg["result"] is not None:
+                st.write(msg["result"])
+            if "fig" in msg and msg["fig"] is not None:
+                st.plotly_chart(msg["fig"], use_container_width=True)
+            if "chart" in msg:
+                try:
+                    st.bar_chart(msg["chart"])
+                except Exception:
+                    pass
+
+    # ── User input ──
+    if prompt := st.chat_input("Ask about your data..."):
+
+        # Show user message immediately
+        st.session_state.chat_history.append(
+            {"role": "user", "content": prompt}
+        )
 
         try:
             client = st.session_state.client
@@ -208,32 +333,41 @@ Question:
             response = client.chat.completions.create(
                 model=model_choice,
                 messages=[
-                    {"role": "system", "content": "Return ONLY executable pandas code."},
-                    {"role": "user", "content": full_prompt},
+                    {"role": "system", "content": build_system_prompt()},
+                    {"role": "user", "content": build_user_prompt(prompt, df)},
                 ],
                 temperature=0,
-                max_tokens=300,
+                max_tokens=1024,
             )
 
             raw = response.choices[0].message.content
             code = extract_code(raw)
-            result = safe_execute(code, df)           # ← uses safe wrapper
+            output = safe_execute(code, df)
 
-            msg: dict = {
+            result = output["result"]
+            fig = output["fig"]
+
+            assistant_msg: dict = {
                 "role": "assistant",
                 "code": code,
-                "result": result,
             }
 
-            # Attach chart when the result is plottable
-            if isinstance(result, pd.Series) and result.dtype.kind in "iufb":
-                msg["chart"] = result
-            elif isinstance(result, pd.DataFrame):
-                num = result.select_dtypes(include="number")
-                if not num.empty:
-                    msg["chart"] = num
+            if result is not None:
+                assistant_msg["result"] = result
 
-            st.session_state.chat_history.append(msg)
+            if fig is not None:
+                assistant_msg["fig"] = fig
+
+            # Fallback bar chart if no plotly fig but result is plottable
+            if fig is None:
+                if isinstance(result, pd.Series) and result.dtype.kind in "iufb":
+                    assistant_msg["chart"] = result
+                elif isinstance(result, pd.DataFrame):
+                    num = result.select_dtypes(include="number")
+                    if not num.empty and len(num) <= 50:
+                        assistant_msg["chart"] = num
+
+            st.session_state.chat_history.append(assistant_msg)
 
         except Exception as e:
             st.session_state.chat_history.append(
@@ -244,7 +378,28 @@ Question:
 
 # ── Fallback messages ──────────────────────────────────────────────
 elif not st.session_state.api_key_set:
-    st.info("🔑 Enter your NVIDIA API key in the sidebar.")
+    st.markdown("---")
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.info("🔑 Enter your NVIDIA API key in the sidebar to get started.")
+        st.markdown("""
+        **How to get your API key:**
+        1. Visit [NVIDIA AI](https://build.nvidia.com/)
+        2. Create an account / sign in
+        3. Generate an API key
+        4. Paste it in the sidebar
+        """)
 
 elif st.session_state.df is None:
-    st.info("📂 Upload a CSV file to get started.")
+    st.markdown("---")
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.info("📂 Upload a CSV file in the sidebar to start chatting.")
+        st.markdown("""
+        **Supported questions:**
+        - 📊 *"Show me sales by region"*
+        - 📈 *"What's the trend over time?"*
+        - 🔢 *"What is the average revenue?"*
+        - 🏆 *"Top 10 customers by spend"*
+        - 🥧 *"Distribution of categories"*
+        """)
