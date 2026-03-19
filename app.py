@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.express as px                          # ← NEW: Plotly support
+import plotly.express as px
+import plotly.graph_objects as go                    # ← FIX: LLM may use go
 from openai import OpenAI
 
 # ── Page configuration ──────────────────────────────────────────────
@@ -12,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ── Custom CSS for polish ───────────────────────────────────────────
+# ── Custom CSS ──────────────────────────────────────────────────────
 st.markdown("""
 <style>
     .stChatMessage { border-radius: 12px; margin-bottom: 1rem; }
@@ -72,7 +73,6 @@ with st.sidebar:
             st.session_state.chat_history = []
         st.success(f"✅ Loaded: {uploaded_file.name}")
 
-        # Show quick preview
         with st.expander("👀 Preview Data"):
             st.dataframe(st.session_state.df.head(10), use_container_width=True)
             st.caption(
@@ -82,34 +82,30 @@ with st.sidebar:
 
     st.markdown("---")
 
-    # Clear chat button
     if st.button("🗑️ Clear Chat", use_container_width=True):
         st.session_state.chat_history = []
         st.rerun()
+
 
 # ── Main ────────────────────────────────────────────────────────────
 st.title("💬 SheetTalk")
 st.caption("Chat with your CSV using NVIDIA AI • Powered by Plotly visualizations")
 
 
-# ── Helper: extract executable code from LLM response ──────────────
+# ── Helper: extract executable code ────────────────────────────────
 def extract_code(raw: str) -> str:
-    """
-    Strip markdown fences, blank lines, and stray comments.
-    Returns all executable lines joined together.
-    """
+    """Strip markdown fences, imports, and comments. Return clean code."""
     if not raw or not raw.strip():
         raise ValueError("LLM returned an empty response")
 
     code = raw.strip()
 
-    # Remove markdown code fences
+    # ── Remove markdown code fences ──
     if "```" in code:
         parts = code.split("```")
         code_blocks = []
         for i, part in enumerate(parts):
-            if i % 2 == 1:  # inside a fence
-                # Strip optional language tag on first line
+            if i % 2 == 1:
                 lines = part.split("\n")
                 if lines and lines[0].strip().lower() in (
                     "python", "py", "python3", ""
@@ -119,21 +115,32 @@ def extract_code(raw: str) -> str:
         if code_blocks:
             code = "\n".join(code_blocks).strip()
 
-    # Remove comment-only lines but keep inline comments
+    # ── Filter lines ──
     lines = []
     for line in code.split("\n"):
         stripped = line.strip()
-        if stripped and not stripped.startswith("#"):
-            lines.append(line)  # preserve original indentation
+
+        # Skip empty lines
+        if not stripped:
+            continue
+        # Skip comment-only lines
+        if stripped.startswith("#"):
+            continue
+        # ← FIX: Skip import statements (modules are pre-loaded)
+        if stripped.startswith("import ") or stripped.startswith("from "):
+            continue
+
+        lines.append(line)  # preserve indentation
 
     if not lines:
-        raise ValueError("LLM returned only comments / empty code")
+        raise ValueError("LLM returned no executable code")
 
     return "\n".join(lines)
 
 
 # ── Safe builtins whitelist ─────────────────────────────────────────
 SAFE_BUILTINS = {
+    # Basic functions
     "len": len,
     "sum": sum,
     "min": min,
@@ -141,6 +148,18 @@ SAFE_BUILTINS = {
     "abs": abs,
     "round": round,
     "sorted": sorted,
+    "any": any,                    # ← FIX: added
+    "all": all,                    # ← FIX: added
+    "hasattr": hasattr,            # ← FIX: added
+    "getattr": getattr,            # ← FIX: added
+    "setattr": setattr,            # ← FIX: added
+    "callable": callable,          # ← FIX: added
+    "iter": iter,                  # ← FIX: added
+    "next": next,                  # ← FIX: added
+    "reversed": reversed,          # ← FIX: added
+    "repr": repr,                  # ← FIX: added
+
+    # Type constructors
     "list": list,
     "dict": dict,
     "tuple": tuple,
@@ -150,6 +169,8 @@ SAFE_BUILTINS = {
     "str": str,
     "bool": bool,
     "range": range,
+    "slice": slice,                # ← FIX: added
+    "object": object,              # ← FIX: added
     "enumerate": enumerate,
     "zip": zip,
     "map": map,
@@ -157,49 +178,60 @@ SAFE_BUILTINS = {
     "print": print,
     "isinstance": isinstance,
     "type": type,
+
+    # Constants
     "True": True,
     "False": False,
     "None": None,
+
+    # ← FIX: Exception classes (pandas raises these internally)
+    "Exception": Exception,
+    "KeyError": KeyError,
+    "ValueError": ValueError,
+    "TypeError": TypeError,
+    "IndexError": IndexError,
+    "AttributeError": AttributeError,
+    "ZeroDivisionError": ZeroDivisionError,
+    "RuntimeError": RuntimeError,
+    "StopIteration": StopIteration,
+    "NameError": NameError,
 }
 
 
 def safe_execute(code: str, df: pd.DataFrame) -> dict:
     """
-    Execute pandas/plotly code and return a dict with:
-      - 'result': the computed data
-      - 'fig':    a Plotly figure (or None)
+    Execute pandas/plotly code and return {'result': ..., 'fig': ...}.
+
+    Strategy:
+      1. Always try eval() first  (handles expressions including ==, !=, >=)
+      2. On SyntaxError, fall back to exec()  (handles assignments, multi-line)
     """
     global_ns = {
         "__builtins__": SAFE_BUILTINS,
-        "df": df.copy(),          # protect original df
+        "df": df.copy(),
         "pd": pd,
         "np": np,
-        "px": px,                 # ← Plotly express available
+        "px": px,
+        "go": go,                  # ← FIX: plotly.graph_objects available
     }
 
     local_ns: dict = {}
 
-    # Try eval first for single expressions with no assignment
-    is_single_expr = (
-        "\n" not in code.strip()
-        and "=" not in code.split("#")[0]
-        and "import" not in code
-    )
+    # ── FIX: Always try eval first ──────────────────────────────────
+    # This correctly handles expressions like df[df['col'] == 'val']
+    # which the old "=" check was misclassifying as assignments
+    try:
+        result = eval(code, global_ns)
+        return {"result": result, "fig": None}
+    except SyntaxError:
+        pass  # contains assignment or multi-line → use exec
 
-    if is_single_expr:
-        try:
-            result = eval(code, global_ns)
-            return {"result": result, "fig": None}
-        except SyntaxError:
-            pass  # fall through to exec
-
-    # Multi-line or assignment → exec
+    # ── exec for assignments / multi-line code ──────────────────────
     exec(code, global_ns, local_ns)
 
     # Extract result
     result = local_ns.get("result", None)
     if result is None:
-        # Fallback: last assigned variable (skip fig)
         non_fig = {k: v for k, v in local_ns.items() if k != "fig"}
         if non_fig:
             result = list(non_fig.values())[-1]
@@ -207,10 +239,14 @@ def safe_execute(code: str, df: pd.DataFrame) -> dict:
     # Extract figure
     fig = local_ns.get("fig", None)
 
+    # ← FIX: Also check global_ns in case code wrote back to it
+    if fig is None and "fig" in global_ns and global_ns["fig"] is not None:
+        fig = global_ns["fig"]
+
     return {"result": result, "fig": fig}
 
 
-# ── Build the advanced system prompt ───────────────────────────────
+# ── Build prompts ──────────────────────────────────────────────────
 def build_system_prompt() -> str:
     return """You are a world-class Python data analyst, visualization expert, and product-grade AI assistant.
 
@@ -230,12 +266,21 @@ You are working inside a Streamlit app where:
 ⚠️ STRICT OUTPUT RULES
 ━━━━━━━━━━━━━━━━━━━━━━━
 - Return ONLY executable Python code
-- NO explanations
-- NO markdown
-- NO comments
+- NO explanations, NO markdown, NO comments
+- Do NOT include any import statements (all modules are pre-loaded)
 - ALWAYS use the variable `df`
 - Final output MUST be stored in: result
 - If visualization is useful, ALSO create: fig
+
+━━━━━━━━━━━━━━━━━━━━━━━
+📦 PRE-LOADED MODULES
+━━━━━━━━━━━━━━━━━━━━━━━
+- pandas as pd
+- numpy as np
+- plotly.express as px
+- plotly.graph_objects as go
+
+Do NOT import anything. Just use them directly.
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 📊 VISUALIZATION RULES
@@ -310,10 +355,19 @@ if st.session_state.api_key_set and st.session_state.df is not None:
                 with st.expander("🔍 View Code", expanded=False):
                     st.code(msg["code"], language="python")
             if "result" in msg and msg["result"] is not None:
-                st.write(msg["result"])
+                result_val = msg["result"]
+                # ← FIX: handle different result types cleanly
+                if isinstance(result_val, pd.DataFrame):
+                    st.dataframe(result_val, use_container_width=True)
+                elif isinstance(result_val, pd.Series):
+                    st.dataframe(
+                        result_val.to_frame(), use_container_width=True
+                    )
+                else:
+                    st.write(result_val)
             if "fig" in msg and msg["fig"] is not None:
                 st.plotly_chart(msg["fig"], use_container_width=True)
-            if "chart" in msg:
+            if "chart" in msg and msg["chart"] is not None:
                 try:
                     st.bar_chart(msg["chart"])
                 except Exception:
@@ -322,7 +376,6 @@ if st.session_state.api_key_set and st.session_state.df is not None:
     # ── User input ──
     if prompt := st.chat_input("Ask about your data..."):
 
-        # Show user message immediately
         st.session_state.chat_history.append(
             {"role": "user", "content": prompt}
         )
@@ -333,8 +386,14 @@ if st.session_state.api_key_set and st.session_state.df is not None:
             response = client.chat.completions.create(
                 model=model_choice,
                 messages=[
-                    {"role": "system", "content": build_system_prompt()},
-                    {"role": "user", "content": build_user_prompt(prompt, df)},
+                    {
+                        "role": "system",
+                        "content": build_system_prompt(),
+                    },
+                    {
+                        "role": "user",
+                        "content": build_user_prompt(prompt, df),
+                    },
                 ],
                 temperature=0,
                 max_tokens=1024,
@@ -360,7 +419,10 @@ if st.session_state.api_key_set and st.session_state.df is not None:
 
             # Fallback bar chart if no plotly fig but result is plottable
             if fig is None:
-                if isinstance(result, pd.Series) and result.dtype.kind in "iufb":
+                if (
+                    isinstance(result, pd.Series)
+                    and result.dtype.kind in "iufb"
+                ):
                     assistant_msg["chart"] = result
                 elif isinstance(result, pd.DataFrame):
                     num = result.select_dtypes(include="number")
@@ -371,7 +433,10 @@ if st.session_state.api_key_set and st.session_state.df is not None:
 
         except Exception as e:
             st.session_state.chat_history.append(
-                {"role": "assistant", "content": f"❌ Error: {str(e)}"}
+                {
+                    "role": "assistant",
+                    "content": f"❌ Error: {str(e)}",
+                }
             )
 
         st.rerun()
@@ -381,7 +446,9 @@ elif not st.session_state.api_key_set:
     st.markdown("---")
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.info("🔑 Enter your NVIDIA API key in the sidebar to get started.")
+        st.info(
+            "🔑 Enter your NVIDIA API key in the sidebar to get started."
+        )
         st.markdown("""
         **How to get your API key:**
         1. Visit [NVIDIA AI](https://build.nvidia.com/)
