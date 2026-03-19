@@ -18,31 +18,31 @@ st.set_page_config(
     },
 )
 
-# ── Professional chart color palette ────────────────────────────────
+# ── Professional chart color palette (dark-theme friendly) ────────
 CHART_COLORS = [
-    "#18181b", "#3f3f46", "#52525b", "#71717a",
-    "#a1a1aa", "#d4d4d8", "#27272a", "#404040",
-    "#525252", "#737373",
+    "#38bdf8", "#818cf8", "#34d399", "#fbbf24",
+    "#f87171", "#a78bfa", "#22d3ee", "#fb923c",
+    "#e879f9", "#4ade80",
 ]
 
 CHART_COLORS_EXTENDED = [
-    "#18181b", "#3f3f46", "#52525b", "#71717a",
-    "#a1a1aa", "#d4d4d8", "#e4e4e7", "#27272a",
-    "#404040", "#525252",
+    "#38bdf8", "#818cf8", "#34d399", "#fbbf24",
+    "#f87171", "#a78bfa", "#22d3ee", "#fb923c",
+    "#e879f9", "#4ade80",
 ]
 
 
 def style_figure(fig):
-    """Apply premium professional styling to any Plotly figure."""
+    """Apply premium dark-theme styling to any Plotly figure."""
     fig.update_layout(
-        template="plotly_white",
+        template="plotly_dark",
         font=dict(
             family="Inter, -apple-system, BlinkMacSystemFont, sans-serif",
             size=13,
-            color="#3f3f46",
+            color="#94a3b8",
         ),
         title=dict(
-            font=dict(size=15, color="#18181b", family="Inter, sans-serif"),
+            font=dict(size=15, color="#e2e8f0", family="Inter, sans-serif"),
             x=0.01,
             xanchor="left",
             pad=dict(l=4, t=4, b=12),
@@ -51,7 +51,7 @@ def style_figure(fig):
         plot_bgcolor="rgba(0,0,0,0)",
         margin=dict(l=52, r=20, t=60, b=52),
         legend=dict(
-            font=dict(size=11, color="#71717a"),
+            font=dict(size=11, color="#94a3b8"),
             bgcolor="rgba(0,0,0,0)",
             borderwidth=0,
             orientation="h",
@@ -62,29 +62,29 @@ def style_figure(fig):
         ),
         colorway=CHART_COLORS,
         hoverlabel=dict(
-            bgcolor="#18181b",
+            bgcolor="#1e293b",
             font_size=12,
             font_family="Inter, sans-serif",
-            font_color="#fafafa",
-            bordercolor="#18181b",
+            font_color="#e2e8f0",
+            bordercolor="#334155",
         ),
         xaxis=dict(
             showgrid=False,
             showline=True,
             linewidth=1,
-            linecolor="#e4e4e7",
-            tickfont=dict(size=11, color="#a1a1aa"),
-            title_font=dict(size=12, color="#71717a"),
+            linecolor="#334155",
+            tickfont=dict(size=11, color="#64748b"),
+            title_font=dict(size=12, color="#94a3b8"),
             zeroline=False,
         ),
         yaxis=dict(
             showgrid=True,
             gridwidth=1,
-            gridcolor="#f4f4f5",
+            gridcolor="rgba(51,65,85,0.5)",
             griddash="dot",
             showline=False,
-            tickfont=dict(size=11, color="#a1a1aa"),
-            title_font=dict(size=12, color="#71717a"),
+            tickfont=dict(size=11, color="#64748b"),
+            title_font=dict(size=12, color="#94a3b8"),
             zeroline=False,
         ),
         bargap=0.32,
@@ -96,7 +96,7 @@ def style_figure(fig):
             trace.marker.line.width = 0
             trace.marker.cornerradius = 3
             if not trace.marker.color:
-                trace.marker.color = "#18181b"
+                trace.marker.color = "#38bdf8"
             trace.marker.opacity = 0.9
 
         if trace.type == "scatter" and trace.mode and "lines" in trace.mode:
@@ -105,27 +105,27 @@ def style_figure(fig):
 
         if trace.type == "pie":
             trace.marker.line.width = 2.5
-            trace.marker.line.color = "#ffffff"
+            trace.marker.line.color = "#1e293b"
             trace.textfont = dict(
-                size=11, color="#3f3f46", family="Inter, sans-serif"
+                size=11, color="#e2e8f0", family="Inter, sans-serif"
             )
             trace.marker.colors = CHART_COLORS
 
         if trace.type == "histogram":
             trace.marker.line.width = 1
-            trace.marker.line.color = "#ffffff"
+            trace.marker.line.color = "#1e293b"
             trace.marker.opacity = 0.85
 
     return fig
 
 
-# ── Custom Font + Premium CSS ───────────────────────────────────────
+# ── Custom Font + Premium Dark CSS ───────────────────────────────
 st.markdown(
     """
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-""",
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    """,
     unsafe_allow_html=True,
 )
 
@@ -133,55 +133,57 @@ st.markdown(
     """
 <style>
 /* ================================================================
-   SHEETTALK — PREMIUM MONOCHROME UI
-   Design: Zinc Confidence — Inspired by Linear, Vercel, Stripe
+   SHEETTALK — DARK THEME UI
+   Palette: Background #0f172a | Sidebar #020617 | Card #1e293b
+            Text #e2e8f0 | Accent #38bdf8
    ================================================================ */
 
 :root {
-    /* ── Zinc palette ── */
-    --zinc-50:  #fafafa;
-    --zinc-100: #f4f4f5;
-    --zinc-200: #e4e4e7;
-    --zinc-300: #d4d4d8;
-    --zinc-400: #a1a1aa;
-    --zinc-500: #71717a;
-    --zinc-600: #52525b;
-    --zinc-700: #3f3f46;
-    --zinc-800: #27272a;
-    --zinc-900: #18181b;
-    --zinc-950: #09090b;
+    /* ── Dark palette ── */
+    --slate-50:  #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+    --slate-950: #020617;
 
     /* ── Semantic mapping ── */
-    --brand-primary:      var(--zinc-900);
-    --brand-accent:       var(--zinc-700);
-    --brand-accent-hover: var(--zinc-950);
-    --brand-accent-light: var(--zinc-100);
-    --brand-accent-glow:  rgba(24, 24, 27, 0.08);
+    --accent:            #38bdf8;
+    --accent-hover:      #7dd3fc;
+    --accent-dim:        rgba(56, 189, 248, 0.15);
+    --accent-glow:       rgba(56, 189, 248, 0.10);
 
-    --bg-app:     #fafafa;
-    --bg-surface: #ffffff;
-    --bg-subtle:  var(--zinc-50);
-    --bg-muted:   var(--zinc-100);
-    --bg-inset:   #f7f7f8;
+    --bg-app:            #0f172a;
+    --bg-sidebar:        #020617;
+    --bg-surface:        #1e293b;
+    --bg-subtle:         #162032;
+    --bg-muted:          #1a2740;
+    --bg-inset:          #0f172a;
+    --bg-input:          #0f172a;
 
-    --border-light:   var(--zinc-200);
-    --border-default: #e4e4e7;
-    --border-hover:   var(--zinc-300);
-    --border-strong:  var(--zinc-400);
+    --border-light:      #1e293b;
+    --border-default:    #334155;
+    --border-hover:      #475569;
+    --border-strong:     #64748b;
 
-    --text-primary:   var(--zinc-900);
-    --text-secondary: var(--zinc-500);
-    --text-tertiary:  var(--zinc-400);
-    --text-muted:     var(--zinc-300);
-    --text-inverse:   #ffffff;
+    --text-primary:      #e2e8f0;
+    --text-secondary:    #94a3b8;
+    --text-tertiary:     #64748b;
+    --text-muted:        #475569;
+    --text-inverse:      #0f172a;
 
-    --success:    #059669;
-    --success-bg: #ecfdf5;
-    --success-border: rgba(5,150,105,0.15);
-    --warning:    #d97706;
-    --warning-bg: #fffbeb;
-    --error:      #dc2626;
-    --error-bg:   #fef2f2;
+    --success:           #34d399;
+    --success-bg:        rgba(52, 211, 153, 0.1);
+    --success-border:    rgba(52, 211, 153, 0.2);
+    --warning:           #fbbf24;
+    --warning-bg:        rgba(251, 191, 36, 0.1);
+    --error:             #f87171;
+    --error-bg:          rgba(248, 113, 113, 0.1);
 
     --radius-xs:   4px;
     --radius-sm:   6px;
@@ -191,22 +193,21 @@ st.markdown(
     --radius-2xl:  20px;
     --radius-full: 9999px;
 
-    --shadow-xs:  0 1px 2px rgba(0,0,0,0.03);
-    --shadow-sm:  0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
-    --shadow-md:  0 4px 6px -1px rgba(0,0,0,0.04), 0 2px 4px -2px rgba(0,0,0,0.02);
-    --shadow-lg:  0 10px 15px -3px rgba(0,0,0,0.04), 0 4px 6px -4px rgba(0,0,0,0.01);
-    --shadow-xl:  0 20px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.02);
-    --shadow-ring: 0 0 0 1px rgba(0,0,0,0.03);
+    --shadow-xs:  0 1px 2px rgba(0,0,0,0.3);
+    --shadow-sm:  0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-md:  0 4px 6px -1px rgba(0,0,0,0.4), 0 2px 4px -2px rgba(0,0,0,0.3);
+    --shadow-lg:  0 10px 15px -3px rgba(0,0,0,0.4), 0 4px 6px -4px rgba(0,0,0,0.2);
+    --shadow-xl:  0 20px 25px -5px rgba(0,0,0,0.5), 0 8px 10px -6px rgba(0,0,0,0.3);
 
     --transition-fast:   120ms cubic-bezier(0.4, 0, 0.2, 1);
     --transition-base:   200ms cubic-bezier(0.4, 0, 0.2, 1);
     --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ── 1. GLOBAL ────────────────────────────────────────────────── */
+/* ── 1. GLOBAL ─────────────────────────────────────────────── */
 html, body, [class*="css"] {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif !important;
-    color: var(--text-primary);
+    color: var(--text-primary) !important;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -221,7 +222,7 @@ html, body, [class*="css"] {
 }
 
 header[data-testid="stHeader"] {
-    background: rgba(250,250,250,0.82) !important;
+    background: rgba(15, 23, 42, 0.85) !important;
     backdrop-filter: saturate(180%) blur(20px) !important;
     -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
     border-bottom: 1px solid var(--border-light) !important;
@@ -231,18 +232,18 @@ header[data-testid="stHeader"] {
 footer    { visibility: hidden; }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--zinc-300); border-radius: var(--radius-full); }
-::-webkit-scrollbar-thumb:hover { background: var(--zinc-400); }
+::-webkit-scrollbar-thumb { background: var(--slate-600); border-radius: var(--radius-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--slate-500); }
 
 /* Selection */
 ::selection {
-    background: rgba(24,24,27,0.1);
-    color: var(--zinc-900);
+    background: var(--accent-dim);
+    color: var(--text-primary);
 }
 
-/* ── 2. TYPOGRAPHY ────────────────────────────────────────────── */
+/* ── 2. TYPOGRAPHY ─────────────────────────────────────────── */
 h1, h2, h3, h4, h5, h6,
 .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
     font-family: 'Inter', sans-serif !important;
@@ -276,25 +277,29 @@ p, .stMarkdown p, .stText {
 }
 
 a {
-    color: var(--text-primary) !important;
+    color: var(--accent) !important;
     text-decoration: none !important;
     transition: opacity var(--transition-fast) !important;
-    border-bottom: 1px solid var(--border-default) !important;
+    border-bottom: 1px solid transparent !important;
 }
 a:hover {
-    opacity: 0.7 !important;
-    border-bottom-color: var(--text-primary) !important;
-    text-decoration: none !important;
+    opacity: 0.85 !important;
+    border-bottom-color: var(--accent) !important;
 }
 
-/* ── 3. SIDEBAR ───────────────────────────────────────────────── */
+/* ── 3. SIDEBAR ────────────────────────────────────────────── */
 [data-testid="stSidebar"] {
-    background-color: var(--bg-surface) !important;
+    background-color: var(--bg-sidebar) !important;
     border-right: 1px solid var(--border-light) !important;
 }
 
 [data-testid="stSidebar"] > div:first-child {
     padding: 1.25rem 1.375rem 1rem !important;
+    background-color: var(--bg-sidebar) !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+    background-color: var(--bg-sidebar) !important;
 }
 
 [data-testid="stSidebar"] .stMarkdown p {
@@ -320,41 +325,39 @@ a:hover {
 }
 
 [data-testid="stSidebar"] .stExpander {
-    border: 1px solid var(--border-light) !important;
+    border: 1px solid var(--border-default) !important;
     border-radius: var(--radius-md) !important;
-    background: var(--bg-subtle) !important;
+    background: var(--bg-surface) !important;
     box-shadow: var(--shadow-xs) !important;
 }
 
-/* ── 4. BUTTONS ───────────────────────────────────────────────── */
+[data-testid="stSidebar"] .stExpander [data-testid="stExpanderDetails"] {
+    background: var(--bg-surface) !important;
+}
+
+/* ── 4. BUTTONS ────────────────────────────────────────────── */
 .stButton > button[kind="primary"],
 .stButton > button[data-testid="baseButton-primary"] {
-    background-color: var(--zinc-900) !important;
+    background-color: var(--accent) !important;
     color: var(--text-inverse) !important;
-    border: 1px solid var(--zinc-900) !important;
+    border: 1px solid var(--accent) !important;
     border-radius: var(--radius-md) !important;
     padding: 0.5625rem 1.5rem !important;
     font-family: 'Inter', sans-serif !important;
     font-size: 0.8125rem !important;
-    font-weight: 500 !important;
+    font-weight: 600 !important;
     letter-spacing: -0.01em !important;
-    box-shadow: var(--shadow-xs), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+    box-shadow: var(--shadow-xs) !important;
     transition: all var(--transition-base) !important;
     line-height: 1.5 !important;
 }
 
 .stButton > button[kind="primary"]:hover,
 .stButton > button[data-testid="baseButton-primary"]:hover {
-    background-color: var(--zinc-950) !important;
-    border-color: var(--zinc-950) !important;
-    box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+    background-color: var(--accent-hover) !important;
+    border-color: var(--accent-hover) !important;
+    box-shadow: var(--shadow-md) !important;
     transform: translateY(-0.5px) !important;
-}
-
-.stButton > button[kind="primary"]:active,
-.stButton > button[data-testid="baseButton-primary"]:active {
-    transform: translateY(0) !important;
-    box-shadow: var(--shadow-xs) !important;
 }
 
 .stButton > button[kind="secondary"],
@@ -376,9 +379,10 @@ a:hover {
 .stButton > button[kind="secondary"]:hover,
 .stButton > button[data-testid="baseButton-secondary"]:hover,
 .stButton > button:hover {
-    background-color: var(--bg-subtle) !important;
+    background-color: var(--bg-muted) !important;
     border-color: var(--border-hover) !important;
     box-shadow: var(--shadow-sm) !important;
+    color: var(--text-primary) !important;
 }
 
 .stDownloadButton > button {
@@ -395,52 +399,65 @@ a:hover {
 
 .stDownloadButton > button:hover {
     border-color: var(--border-hover) !important;
-    background-color: var(--bg-subtle) !important;
+    background-color: var(--bg-muted) !important;
     box-shadow: var(--shadow-sm) !important;
 }
 
-/* ── 5. FORM INPUTS ───────────────────────────────────────────── */
+/* ── 5. FORM INPUTS ────────────────────────────────────────── */
+
+/* Text Input */
 .stTextInput > div > div > input {
-    background-color: var(--bg-surface) !important;
+    background-color: var(--bg-input) !important;
     border: 1px solid var(--border-default) !important;
     border-radius: var(--radius-md) !important;
     padding: 0.5625rem 0.75rem !important;
     font-family: 'Inter', sans-serif !important;
-    font-size: 0.8125rem !important;
+    font-size: 0.875rem !important;
     color: var(--text-primary) !important;
     transition: all var(--transition-base) !important;
     box-shadow: var(--shadow-xs) !important;
+    caret-color: var(--accent) !important;
 }
 
 .stTextInput > div > div > input:focus {
-    border-color: var(--zinc-400) !important;
-    box-shadow: 0 0 0 3px var(--brand-accent-glow), var(--shadow-xs) !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px var(--accent-dim), var(--shadow-xs) !important;
     outline: none !important;
 }
 
 .stTextInput > div > div > input::placeholder {
     color: var(--text-tertiary) !important;
+    opacity: 1 !important;
 }
 
+/* Text Area */
 .stTextArea > div > div > textarea {
-    background-color: var(--bg-surface) !important;
+    background-color: var(--bg-input) !important;
     border: 1px solid var(--border-default) !important;
     border-radius: var(--radius-md) !important;
     padding: 0.5625rem 0.75rem !important;
     font-family: 'Inter', sans-serif !important;
-    font-size: 0.8125rem !important;
+    font-size: 0.875rem !important;
     color: var(--text-primary) !important;
     transition: all var(--transition-base) !important;
     box-shadow: var(--shadow-xs) !important;
+    caret-color: var(--accent) !important;
 }
 
 .stTextArea > div > div > textarea:focus {
-    border-color: var(--zinc-400) !important;
-    box-shadow: 0 0 0 3px var(--brand-accent-glow), var(--shadow-xs) !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px var(--accent-dim), var(--shadow-xs) !important;
 }
 
+.stTextArea > div > div > textarea::placeholder {
+    color: var(--text-tertiary) !important;
+    opacity: 1 !important;
+}
+
+/* ── SELECTBOX FIX (CRITICAL) ──────────────────────────────── */
+/* Main selectbox container */
 .stSelectbox > div > div {
-    background-color: var(--bg-surface) !important;
+    background-color: var(--bg-input) !important;
     border: 1px solid var(--border-default) !important;
     border-radius: var(--radius-md) !important;
     transition: all var(--transition-base) !important;
@@ -452,24 +469,106 @@ a:hover {
 }
 
 .stSelectbox > div > div[aria-expanded="true"] {
-    border-color: var(--zinc-400) !important;
-    box-shadow: 0 0 0 3px var(--brand-accent-glow), var(--shadow-xs) !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px var(--accent-dim), var(--shadow-xs) !important;
 }
 
+/* Selectbox selected text — THE FIX */
+.stSelectbox [data-baseweb="select"] span,
+.stSelectbox [data-baseweb="select"] .css-1dimb5e-singleValue,
+.stSelectbox [data-baseweb="select"] > div,
+.stSelectbox [data-baseweb="select"] > div > div,
+.stSelectbox [data-baseweb="select"] > div > div > div {
+    color: var(--text-primary) !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.875rem !important;
+}
+
+/* Selectbox placeholder */
+.stSelectbox [data-baseweb="select"] [data-testid="stMarkdownContainer"],
+.stSelectbox [data-baseweb="select"] .css-1wa3eu0-placeholder {
+    color: var(--text-tertiary) !important;
+}
+
+/* Selectbox arrow/indicator */
+.stSelectbox [data-baseweb="select"] svg {
+    fill: var(--text-secondary) !important;
+    color: var(--text-secondary) !important;
+}
+
+/* Selectbox dropdown menu */
+[data-baseweb="popover"] {
+    border: 1px solid var(--border-default) !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: var(--shadow-lg) !important;
+    overflow: hidden !important;
+}
+
+[data-baseweb="popover"] > div,
+[data-baseweb="menu"],
+[role="listbox"] {
+    background-color: var(--bg-surface) !important;
+    border: none !important;
+}
+
+/* Dropdown menu items */
+[data-baseweb="menu"] [role="option"],
+[role="listbox"] [role="option"],
+[data-baseweb="menu"] li,
+[role="listbox"] li {
+    background-color: var(--bg-surface) !important;
+    color: var(--text-primary) !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.875rem !important;
+    padding: 0.5rem 0.75rem !important;
+    transition: background var(--transition-fast) !important;
+}
+
+/* Dropdown hover */
+[data-baseweb="menu"] [role="option"]:hover,
+[role="listbox"] [role="option"]:hover,
+[data-baseweb="menu"] li:hover,
+[role="listbox"] li:hover,
+[data-baseweb="menu"] [data-highlighted],
+[data-baseweb="menu"] [aria-selected="true"],
+[role="listbox"] [aria-selected="true"] {
+    background-color: var(--accent-dim) !important;
+    color: var(--accent) !important;
+}
+
+/* MultiSelect */
+.stMultiSelect [data-baseweb="select"] {
+    background-color: var(--bg-input) !important;
+    border: 1px solid var(--border-default) !important;
+    border-radius: var(--radius-md) !important;
+}
+
+.stMultiSelect [data-baseweb="select"] span,
+.stMultiSelect [data-baseweb="tag"] {
+    background-color: var(--accent-dim) !important;
+    color: var(--accent) !important;
+    border: 1px solid rgba(56,189,248,0.3) !important;
+    border-radius: var(--radius-sm) !important;
+}
+
+/* Labels for all inputs */
 .stTextInput > label,
 .stTextArea > label,
 .stSelectbox > label,
 .stMultiSelect > label,
-.stFileUploader > label {
+.stFileUploader > label,
+.stSlider > label,
+.stCheckbox > label,
+.stRadio > label {
     font-family: 'Inter', sans-serif !important;
-    font-size: 0.6875rem !important;
+    font-size: 0.75rem !important;
     font-weight: 500 !important;
     color: var(--text-secondary) !important;
     letter-spacing: 0.01em !important;
     margin-bottom: 0.25rem !important;
 }
 
-/* ── 6. FILE UPLOADER ─────────────────────────────────────────── */
+/* ── 6. FILE UPLOADER ──────────────────────────────────────── */
 [data-testid="stFileUploader"] {
     background-color: var(--bg-subtle) !important;
     border: 1.5px dashed var(--border-default) !important;
@@ -479,26 +578,35 @@ a:hover {
 }
 
 [data-testid="stFileUploader"]:hover {
-    border-color: var(--zinc-400) !important;
+    border-color: var(--accent) !important;
     background-color: var(--bg-muted) !important;
 }
 
+[data-testid="stFileUploader"] section {
+    background-color: transparent !important;
+}
+
 [data-testid="stFileUploader"] section > button {
-    background-color: var(--zinc-900) !important;
+    background-color: var(--accent) !important;
     color: var(--text-inverse) !important;
     border: none !important;
     border-radius: var(--radius-sm) !important;
-    font-weight: 500 !important;
+    font-weight: 600 !important;
     font-size: 0.75rem !important;
     padding: 0.375rem 0.875rem !important;
 }
 
-[data-testid="stFileUploader"] small {
+[data-testid="stFileUploader"] small,
+[data-testid="stFileUploader"] span {
     color: var(--text-tertiary) !important;
-    font-size: 0.625rem !important;
+    font-size: 0.6875rem !important;
 }
 
-/* ── 7. TABS ──────────────────────────────────────────────────── */
+[data-testid="stFileUploader"] [data-testid="stFileUploaderFileName"] {
+    color: var(--text-primary) !important;
+}
+
+/* ── 7. TABS ───────────────────────────────────────────────── */
 .stTabs [data-baseweb="tab-list"] {
     gap: 0 !important;
     border-bottom: 1px solid var(--border-light) !important;
@@ -523,13 +631,13 @@ a:hover {
 }
 
 .stTabs [aria-selected="true"] {
-    color: var(--text-primary) !important;
+    color: var(--accent) !important;
     font-weight: 600 !important;
-    border-bottom-color: var(--zinc-900) !important;
+    border-bottom-color: var(--accent) !important;
 }
 
 .stTabs [data-baseweb="tab-highlight"] {
-    background-color: var(--zinc-900) !important;
+    background-color: var(--accent) !important;
     height: 2px !important;
 }
 
@@ -537,7 +645,7 @@ a:hover {
     padding-top: 1.125rem !important;
 }
 
-/* ── 8. METRICS ───────────────────────────────────────────────── */
+/* ── 8. METRICS ────────────────────────────────────────────── */
 [data-testid="stMetric"] {
     background-color: var(--bg-surface) !important;
     border: 1px solid var(--border-light) !important;
@@ -549,6 +657,7 @@ a:hover {
 
 [data-testid="stMetric"]:hover {
     box-shadow: var(--shadow-sm) !important;
+    border-color: var(--border-default) !important;
 }
 
 [data-testid="stMetric"] label {
@@ -566,17 +675,28 @@ a:hover {
     letter-spacing: -0.03em !important;
 }
 
-/* ── 9. DATAFRAMES ────────────────────────────────────────────── */
-[data-testid="stDataFrame"], .stDataFrame {
-    border: 1px solid var(--border-light) !important;
+[data-testid="stMetric"] [data-testid="stMetricDelta"] {
+    color: var(--success) !important;
+}
+
+/* ── 9. DATAFRAMES ─────────────────────────────────────────── */
+[data-testid="stDataFrame"],
+.stDataFrame {
+    border: 1px solid var(--border-default) !important;
     border-radius: var(--radius-lg) !important;
     overflow: hidden !important;
     box-shadow: var(--shadow-xs) !important;
 }
 
-/* ── 10. EXPANDER ─────────────────────────────────────────────── */
+/* Dataframe header and cells */
+[data-testid="stDataFrame"] [data-testid="glideDataEditor"],
+.dvn-scroller {
+    background-color: var(--bg-surface) !important;
+}
+
+/* ── 10. EXPANDER ──────────────────────────────────────────── */
 [data-testid="stExpander"] {
-    border: 1px solid var(--border-light) !important;
+    border: 1px solid var(--border-default) !important;
     border-radius: var(--radius-md) !important;
     overflow: hidden !important;
     box-shadow: var(--shadow-xs) !important;
@@ -586,6 +706,7 @@ a:hover {
 
 [data-testid="stExpander"] details {
     border: none !important;
+    background: var(--bg-surface) !important;
 }
 
 [data-testid="stExpander"] summary {
@@ -593,45 +714,90 @@ a:hover {
     font-weight: 500 !important;
     font-size: 0.8125rem !important;
     color: var(--text-primary) !important;
+    background: var(--bg-surface) !important;
+}
+
+[data-testid="stExpander"] summary:hover {
+    color: var(--accent) !important;
 }
 
 [data-testid="stExpander"] [data-testid="stExpanderDetails"] {
     padding: 0 0.875rem 0.875rem !important;
     border-top: 1px solid var(--border-light) !important;
+    background: var(--bg-surface) !important;
 }
 
-/* ── 11. ALERTS ───────────────────────────────────────────────── */
+[data-testid="stExpander"] summary svg {
+    color: var(--text-secondary) !important;
+    fill: var(--text-secondary) !important;
+}
+
+/* ── 11. ALERTS ────────────────────────────────────────────── */
 [data-testid="stAlert"] {
     border-radius: var(--radius-md) !important;
     font-size: 0.8125rem !important;
     border-left-width: 3px !important;
+    background-color: var(--bg-surface) !important;
+    color: var(--text-primary) !important;
 }
 
-/* ── 12. PROGRESS ─────────────────────────────────────────────── */
+/* ── 12. PROGRESS ──────────────────────────────────────────── */
 .stProgress > div > div > div > div {
-    background-color: var(--zinc-700) !important;
+    background-color: var(--accent) !important;
     border-radius: var(--radius-full) !important;
 }
 
 .stProgress > div > div {
-    background-color: var(--zinc-100) !important;
+    background-color: var(--bg-surface) !important;
     border-radius: var(--radius-full) !important;
     height: 3px !important;
 }
 
-/* ── 13. CHAT INTERFACE ───────────────────────────────────────── */
+/* ── 13. CHAT INTERFACE ────────────────────────────────────── */
 [data-testid="stChatMessage"] {
     border-radius: var(--radius-lg) !important;
     border: 1px solid var(--border-light) !important;
-    background: var(--bg-surface) !important;
-    box-shadow: var(--shadow-xs) !important;
-    padding: 0.875rem 1.125rem !important;
-    margin-bottom: 0.5rem !important;
+    padding: 1rem 1.25rem !important;
+    margin-bottom: 0.625rem !important;
     transition: box-shadow var(--transition-fast) !important;
+}
+
+/* User messages */
+[data-testid="stChatMessage"][data-testid="stChatMessage"]:nth-child(odd) {
+    background: var(--bg-surface) !important;
+}
+
+/* Assistant messages */
+[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
+    background: var(--bg-subtle) !important;
+    border-color: var(--border-default) !important;
+}
+
+/* User messages */
+[data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
+    background: var(--bg-surface) !important;
+    border-color: var(--border-light) !important;
 }
 
 [data-testid="stChatMessage"]:hover {
     box-shadow: var(--shadow-sm) !important;
+}
+
+[data-testid="stChatMessage"] p,
+[data-testid="stChatMessage"] span,
+[data-testid="stChatMessage"] div {
+    color: var(--text-primary) !important;
+}
+
+[data-testid="stChatMessage"] .stMarkdown p {
+    color: var(--text-primary) !important;
+}
+
+/* Chat input */
+[data-testid="stChatInput"] {
+    border-top: 1px solid var(--border-light) !important;
+    background: var(--bg-app) !important;
+    padding-top: 0.75rem !important;
 }
 
 [data-testid="stChatInput"] textarea {
@@ -639,33 +805,47 @@ a:hover {
     font-size: 0.875rem !important;
     border-radius: var(--radius-lg) !important;
     border: 1px solid var(--border-default) !important;
-    padding: 0.6875rem 1rem !important;
+    padding: 0.75rem 1rem !important;
     background: var(--bg-surface) !important;
     color: var(--text-primary) !important;
     box-shadow: var(--shadow-sm) !important;
     transition: all var(--transition-base) !important;
+    caret-color: var(--accent) !important;
+}
+
+[data-testid="stChatInput"] textarea::placeholder {
+    color: var(--text-tertiary) !important;
+    opacity: 1 !important;
 }
 
 [data-testid="stChatInput"] textarea:focus {
-    border-color: var(--zinc-400) !important;
-    box-shadow: 0 0 0 3px var(--brand-accent-glow), var(--shadow-sm) !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px var(--accent-dim), var(--shadow-sm) !important;
 }
 
 [data-testid="stChatInput"] button {
-    background-color: var(--zinc-900) !important;
+    background-color: var(--accent) !important;
     border-radius: var(--radius-md) !important;
     color: var(--text-inverse) !important;
     transition: all var(--transition-fast) !important;
 }
 
 [data-testid="stChatInput"] button:hover {
-    background-color: var(--zinc-950) !important;
+    background-color: var(--accent-hover) !important;
 }
 
-/* ── 14. PLOTLY CHART ─────────────────────────────────────────── */
-[data-testid="stPlotlyChart"], .stPlotlyChart {
+/* Chat avatar styling */
+[data-testid="stChatMessage"] [data-testid="chatAvatarIcon-user"],
+[data-testid="stChatMessage"] [data-testid="chatAvatarIcon-assistant"] {
+    background-color: var(--accent-dim) !important;
+    border: 1px solid rgba(56,189,248,0.2) !important;
+}
+
+/* ── 14. PLOTLY CHART ──────────────────────────────────────── */
+[data-testid="stPlotlyChart"],
+.stPlotlyChart {
     background: var(--bg-surface) !important;
-    border: 1px solid var(--border-light) !important;
+    border: 1px solid var(--border-default) !important;
     border-radius: var(--radius-lg) !important;
     padding: 0.625rem !important;
     box-shadow: var(--shadow-xs) !important;
@@ -673,31 +853,76 @@ a:hover {
     transition: box-shadow var(--transition-base) !important;
 }
 
-[data-testid="stPlotlyChart"]:hover, .stPlotlyChart:hover {
+[data-testid="stPlotlyChart"]:hover,
+.stPlotlyChart:hover {
     box-shadow: var(--shadow-sm) !important;
 }
 
-/* ── 15. CODE BLOCKS ──────────────────────────────────────────── */
+/* ── 15. CODE BLOCKS ───────────────────────────────────────── */
 div[data-testid="stCodeBlock"] {
     border-radius: var(--radius-md) !important;
     overflow: hidden !important;
-    border: 1px solid var(--border-light) !important;
+    border: 1px solid var(--border-default) !important;
     box-shadow: var(--shadow-xs) !important;
+}
+
+div[data-testid="stCodeBlock"] pre {
+    background-color: var(--slate-950) !important;
 }
 
 code {
     font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Cascadia Code', monospace !important;
     font-size: 0.8125rem !important;
+    color: var(--text-primary) !important;
 }
 
-/* ── 16. DIVIDER ──────────────────────────────────────────────── */
+/* Inline code */
+.stMarkdown code {
+    background-color: var(--bg-surface) !important;
+    color: var(--accent) !important;
+    padding: 0.125rem 0.375rem !important;
+    border-radius: var(--radius-xs) !important;
+    border: 1px solid var(--border-light) !important;
+    font-size: 0.8125rem !important;
+}
+
+/* ── 16. DIVIDER ───────────────────────────────────────────── */
 hr, .stMarkdown hr {
     border: none !important;
     border-top: 1px solid var(--border-light) !important;
     margin: 1.25rem 0 !important;
 }
 
-/* ── 17. CUSTOM COMPONENTS ────────────────────────────────────── */
+/* ── 17. CAPTION / SMALL TEXT ──────────────────────────────── */
+.stCaption, [data-testid="stCaptionContainer"] {
+    color: var(--text-tertiary) !important;
+}
+
+/* ── 18. TOAST / NOTIFICATIONS ─────────────────────────────── */
+[data-testid="stToast"] {
+    background-color: var(--bg-surface) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-default) !important;
+    border-radius: var(--radius-md) !important;
+}
+
+/* ── 19. SLIDER ────────────────────────────────────────────── */
+.stSlider [data-baseweb="slider"] [role="slider"] {
+    background-color: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
+
+.stSlider [data-baseweb="slider"] [data-testid="stTickBar"] {
+    background-color: var(--bg-surface) !important;
+}
+
+/* ── 20. CHECKBOX / RADIO ──────────────────────────────────── */
+.stCheckbox label span,
+.stRadio label span {
+    color: var(--text-primary) !important;
+}
+
+/* ── 21. CUSTOM COMPONENTS ─────────────────────────────────── */
 
 /* Hero */
 .hero-section {
@@ -732,8 +957,14 @@ hr, .stMarkdown hr {
     width: 5px;
     height: 5px;
     border-radius: 50%;
-    background: var(--zinc-400);
+    background: var(--accent);
     display: inline-block;
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
 }
 
 .hero-title {
@@ -801,8 +1032,8 @@ hr, .stMarkdown hr {
     width: 32px;
     height: 32px;
     border-radius: var(--radius-sm);
-    background: var(--zinc-900);
-    color: white;
+    background: var(--accent);
+    color: var(--text-inverse);
     font-size: 0.875rem;
     flex-shrink: 0;
 }
@@ -861,7 +1092,7 @@ hr, .stMarkdown hr {
 }
 
 .sidebar-meta a:hover {
-    color: var(--text-primary) !important;
+    color: var(--accent) !important;
 }
 
 /* Status indicators */
@@ -878,7 +1109,7 @@ hr, .stMarkdown hr {
 
 .indicator-active {
     background: var(--success-bg);
-    color: #065f46;
+    color: var(--success);
     border: 1px solid var(--success-border);
 }
 
@@ -892,14 +1123,14 @@ hr, .stMarkdown hr {
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
-    padding: 0.1875rem 0.5rem;
-    background: var(--bg-muted);
+    padding: 0.25rem 0.625rem;
+    background: var(--bg-surface);
     color: var(--text-secondary);
-    font-size: 0.5625rem;
+    font-size: 0.625rem;
     font-weight: 500;
     border-radius: var(--radius-full);
-    border: 1px solid var(--border-light);
-    margin-top: 0.25rem;
+    border: 1px solid var(--border-default);
+    margin-top: 0.375rem;
 }
 
 /* Onboarding cards */
@@ -909,7 +1140,7 @@ hr, .stMarkdown hr {
     border-radius: var(--radius-xl);
     padding: 2.75rem 2.25rem;
     text-align: center;
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-md);
     max-width: 460px;
     margin: 0 auto;
     animation: cardFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
@@ -919,13 +1150,13 @@ hr, .stMarkdown hr {
     width: 48px;
     height: 48px;
     border-radius: var(--radius-lg);
-    background: var(--bg-muted);
+    background: var(--accent-dim);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.25rem;
     margin: 0 auto 1.375rem;
-    border: 1px solid var(--border-light);
+    border: 1px solid rgba(56,189,248,0.2);
 }
 
 .ob-heading {
@@ -972,6 +1203,15 @@ hr, .stMarkdown hr {
     font-weight: 600 !important;
 }
 
+.ob-steps a {
+    color: var(--accent) !important;
+    border-bottom: 1px solid transparent !important;
+}
+
+.ob-steps a:hover {
+    border-bottom-color: var(--accent) !important;
+}
+
 .ob-step-num {
     display: inline-flex;
     align-items: center;
@@ -979,9 +1219,9 @@ hr, .stMarkdown hr {
     width: 18px;
     height: 18px;
     border-radius: var(--radius-full);
-    background: var(--zinc-100);
-    border: 1px solid var(--border-default);
-    color: var(--text-secondary);
+    background: var(--accent-dim);
+    border: 1px solid rgba(56,189,248,0.2);
+    color: var(--accent);
     font-size: 0.625rem;
     font-weight: 600;
     flex-shrink: 0;
@@ -1007,10 +1247,10 @@ hr, .stMarkdown hr {
     display: flex;
     align-items: center;
     gap: 0.3125rem;
-    padding: 0.4375rem 0.625rem;
+    padding: 0.5rem 0.75rem;
     background: var(--bg-subtle);
     border: 1px solid var(--border-light);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     font-size: 0.6875rem;
     color: var(--text-secondary);
     transition: all var(--transition-fast);
@@ -1019,9 +1259,9 @@ hr, .stMarkdown hr {
 }
 
 .ob-chip:hover {
-    border-color: var(--border-hover);
-    background: var(--bg-muted);
-    color: var(--text-primary);
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
 }
 
 .ob-chip-icon {
@@ -1038,7 +1278,7 @@ hr, .stMarkdown hr {
     gap: 0.375rem;
     padding: 0.5rem 0.875rem;
     background: var(--bg-surface);
-    border: 1px solid var(--border-light);
+    border: 1px solid var(--border-default);
     border-radius: var(--radius-md);
     margin-bottom: 0.75rem;
     font-size: 0.6875rem;
@@ -1059,6 +1299,7 @@ hr, .stMarkdown hr {
     border-radius: 50%;
     background: var(--success);
     flex-shrink: 0;
+    animation: pulse-dot 2s ease-in-out infinite;
 }
 
 /* Footer */
@@ -1096,12 +1337,12 @@ hr, .stMarkdown hr {
 }
 
 .site-footer-links a:hover {
-    color: var(--text-primary) !important;
+    color: var(--accent) !important;
     opacity: 1 !important;
 }
 
 .site-footer-sep {
-    color: var(--zinc-200);
+    color: var(--text-muted);
     margin: 0 0.3125rem;
 }
 
@@ -1111,7 +1352,7 @@ hr, .stMarkdown hr {
     letter-spacing: 0.015em;
 }
 
-/* ── 18. ANIMATIONS ───────────────────────────────────────────── */
+/* ── 22. ANIMATIONS ────────────────────────────────────────── */
 @keyframes heroFadeIn {
     from { opacity: 0; transform: translateY(12px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -1122,13 +1363,13 @@ hr, .stMarkdown hr {
     to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* ── 19. RESPONSIVE ───────────────────────────────────────────── */
+/* ── 23. RESPONSIVE ────────────────────────────────────────── */
 @media (max-width: 768px) {
     .main .block-container {
         padding-left: 1rem !important;
         padding-right: 1rem !important;
     }
-    .hero-title  { font-size: 1.75rem !important; }
+    .hero-title { font-size: 1.75rem !important; }
     .hero-subtitle { font-size: 0.875rem !important; }
     .hero-section { padding: 2rem 0 1.25rem; }
     .ob-grid { grid-template-columns: 1fr; }
@@ -1140,11 +1381,97 @@ hr, .stMarkdown hr {
     .hero-title { font-size: 1.5rem !important; }
     h1, .stMarkdown h1 { font-size: 1.375rem !important; }
 }
+
+/* ── 24. EXTRA GLOBAL OVERRIDES FOR DARK THEME ─────────────── */
+
+/* Ensure ALL Streamlit text elements are visible */
+.stMarkdown, .stMarkdown p, .stMarkdown span,
+.stMarkdown li, .stMarkdown td, .stMarkdown th,
+.element-container, .stText, div[data-testid="stText"] {
+    color: var(--text-primary) !important;
+}
+
+/* Widget help text */
+.stTooltipIcon, div[data-testid="tooltipHoverTarget"] {
+    color: var(--text-tertiary) !important;
+}
+
+/* Spinner */
+.stSpinner > div {
+    border-color: var(--accent) transparent transparent transparent !important;
+}
+
+/* Empty state */
+[data-testid="stEmpty"] {
+    color: var(--text-tertiary) !important;
+}
+
+/* JSON viewer */
+[data-testid="stJson"] {
+    background-color: var(--bg-surface) !important;
+    border: 1px solid var(--border-default) !important;
+    border-radius: var(--radius-md) !important;
+}
+
+/* Table styling */
+.stTable table {
+    background-color: var(--bg-surface) !important;
+}
+
+.stTable th {
+    background-color: var(--bg-muted) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-default) !important;
+}
+
+.stTable td {
+    color: var(--text-primary) !important;
+    border-color: var(--border-light) !important;
+}
+
+/* Number input */
+.stNumberInput > div > div > input {
+    background-color: var(--bg-input) !important;
+    border: 1px solid var(--border-default) !important;
+    border-radius: var(--radius-md) !important;
+    color: var(--text-primary) !important;
+}
+
+.stNumberInput button {
+    background-color: var(--bg-surface) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-default) !important;
+}
+
+/* Date input */
+.stDateInput > div > div > input {
+    background-color: var(--bg-input) !important;
+    border: 1px solid var(--border-default) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Popover / date picker overrides */
+[data-baseweb="calendar"],
+[data-baseweb="datepicker"] {
+    background-color: var(--bg-surface) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Ensure widget containers don't break */
+.stElementContainer, [data-testid="stElementContainer"] {
+    color: var(--text-primary) !important;
+}
+
+/* Fix any remaining white backgrounds in Streamlit internals */
+.css-1d391kg, .css-12w0qpk, .css-1avcm0n,
+.css-18e3th9, .css-hxt7ib {
+    background-color: var(--bg-app) !important;
+}
+
 </style>
 """,
     unsafe_allow_html=True,
 )
-
 
 # ── Session state ───────────────────────────────────────────────────
 if "chat_history" not in st.session_state:
@@ -1167,7 +1494,7 @@ with st.sidebar:
                 </div>
             </div>
         </div>
-    """,
+        """,
         unsafe_allow_html=True,
     )
 
@@ -1264,7 +1591,6 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
-
 # ── Hero ────────────────────────────────────────────────────────────
 st.markdown(
     """
@@ -1293,7 +1619,7 @@ st.markdown(
             </span>
         </div>
     </div>
-""",
+    """,
     unsafe_allow_html=True,
 )
 
@@ -1401,24 +1727,27 @@ You are working inside a Streamlit app where:
 ━━━━━━━━━━━━━━━━━━━━━━━
 🎯 YOUR OBJECTIVE
 ━━━━━━━━━━━━━━━━━━━━━━━
-1. Understand the user's question
-2. Perform accurate data analysis using pandas/numpy
-3. Return clean, meaningful results
-4. Create a beautiful Plotly visualization when useful
+
+- Understand the user's question
+- Perform accurate data analysis using pandas/numpy
+- Return clean, meaningful results
+- Create a beautiful Plotly visualization when useful
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 ⚠️ STRICT OUTPUT RULES
 ━━━━━━━━━━━━━━━━━━━━━━━
+
 - Return ONLY executable Python code
 - NO explanations, NO markdown, NO comments
 - Do NOT include any import statements (all modules are pre-loaded)
 - ALWAYS use the variable `df`
-- Final output MUST be stored in: result
-- If visualization is useful, ALSO create: fig
+- Final output MUST be stored in: `result`
+- If visualization is useful, ALSO create: `fig`
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 📦 PRE-LOADED MODULES
 ━━━━━━━━━━━━━━━━━━━━━━━
+
 - pandas as pd
 - numpy as np
 - plotly.express as px
@@ -1429,16 +1758,16 @@ Do NOT import anything. Just use them directly.
 ━━━━━━━━━━━━━━━━━━━━━━━
 📊 VISUALIZATION RULES
 ━━━━━━━━━━━━━━━━━━━━━━━
+
 - Use plotly.express as px (already imported)
 - Charts must look clean, modern, and professional
-- Use template='plotly_white' always
-- Use a monochromatic grey palette: ['#18181b', '#3f3f46', '#52525b', '#71717a', '#a1a1aa', '#d4d4d8']
-
-AUTO-SELECT chart type:
-- Comparison → px.bar
-- Trends/time → px.line
-- Distribution → px.histogram
-- Proportions → px.pie
+- Use template='plotly_dark' always (dark theme app)
+- Use vibrant colors for dark bg: ['#38bdf8', '#818cf8', '#34d399', '#fbbf24', '#f87171', '#a78bfa']
+- AUTO-SELECT chart type:
+  - Comparison → px.bar
+  - Trends/time → px.line
+  - Distribution → px.histogram
+  - Proportions → px.pie
 
 RULES:
 - Always sort values before plotting
@@ -1446,13 +1775,14 @@ RULES:
 - Add proper title using title='...'
 - Use clear axis labels
 - Avoid clutter
-- For bar charts, use color_discrete_sequence=['#18181b']
-- For line charts, use color_discrete_sequence=['#18181b']
-- For pie charts, use color_discrete_sequence=['#18181b', '#3f3f46', '#52525b', '#71717a', '#a1a1aa', '#d4d4d8']
+- For bar charts, use color_discrete_sequence=['#38bdf8']
+- For line charts, use color_discrete_sequence=['#38bdf8']
+- For pie charts, use color_discrete_sequence=['#38bdf8', '#818cf8', '#34d399', '#fbbf24', '#f87171', '#a78bfa']
 
 ━━━━━━━━━━━━━━━━━━━━━━━
 🧠 DATA HANDLING RULES
 ━━━━━━━━━━━━━━━━━━━━━━━
+
 - Handle missing values if needed
 - Use groupby for aggregations
 - Use meaningful column names
@@ -1462,6 +1792,7 @@ RULES:
 ━━━━━━━━━━━━━━━━━━━━━━━
 💬 OUTPUT FORMAT
 ━━━━━━━━━━━━━━━━━━━━━━━
+
 - The result should feel clean and readable
 - Avoid returning huge raw tables
 - Prefer summaries, grouped data, or key insights
@@ -1609,7 +1940,7 @@ elif not st.session_state.api_key_set:
                 <p><span class="ob-step-num">4</span> Paste it in the sidebar</p>
             </div>
         </div>
-    """,
+        """,
         unsafe_allow_html=True,
     )
 
@@ -1644,10 +1975,9 @@ elif st.session_state.df is None:
                 </div>
             </div>
         </div>
-    """,
+        """,
         unsafe_allow_html=True,
     )
-
 
 # ── Footer ──────────────────────────────────────────────────────────
 year = datetime.now().year
@@ -1667,6 +1997,6 @@ st.markdown(
             © {year} SheetTalk · Made with ❤️ by Dhokla
         </div>
     </div>
-""",
+    """,
     unsafe_allow_html=True,
 )
