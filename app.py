@@ -28,16 +28,16 @@ CHART_COLORS = [
 def style_figure(fig):
     fig.update_layout(
         template="plotly_dark",
-        font=dict(family="Inter, -apple-system, BlinkMacSystemFont, sans-serif", size=14, color="#B3B3B3"),
+        font=dict(family="Inter, -apple-system, BlinkMacSystemFont, sans-serif", size=14, color="#FFFFFF"),
         title=dict(font=dict(size=18, color="#FFFFFF", family="Inter, sans-serif"), x=0.01, xanchor="left", pad=dict(l=4, t=6, b=14)),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         margin=dict(l=56, r=24, t=72, b=56),
-        legend=dict(font=dict(size=12, color="#B3B3B3"), bgcolor="rgba(0,0,0,0)", borderwidth=0, orientation="h", yanchor="bottom", y=-0.22, xanchor="center", x=0.5),
+        legend=dict(font=dict(size=12, color="#FFFFFF"), bgcolor="rgba(0,0,0,0)", borderwidth=0, orientation="h", yanchor="bottom", y=-0.22, xanchor="center", x=0.5),
         colorway=CHART_COLORS,
         hoverlabel=dict(bgcolor="#282828", font_size=13, font_family="Inter, sans-serif", font_color="#FFFFFF", bordercolor="#404040"),
-        xaxis=dict(showgrid=False, showline=True, linewidth=1, linecolor="#333333", tickfont=dict(size=12, color="#A0A0A0"), title_font=dict(size=13, color="#B3B3B3"), zeroline=False),
-        yaxis=dict(showgrid=True, gridwidth=1, gridcolor="rgba(255,255,255,0.06)", griddash="dot", showline=False, tickfont=dict(size=12, color="#A0A0A0"), title_font=dict(size=13, color="#B3B3B3"), zeroline=False),
+        xaxis=dict(showgrid=False, showline=True, linewidth=1, linecolor="#333333", tickfont=dict(size=12, color="#FFFFFF"), title_font=dict(size=13, color="#FFFFFF"), zeroline=False),
+        yaxis=dict(showgrid=True, gridwidth=1, gridcolor="rgba(255,255,255,0.06)", griddash="dot", showline=False, tickfont=dict(size=12, color="#FFFFFF"), title_font=dict(size=13, color="#FFFFFF"), zeroline=False),
         bargap=0.28, bargroupgap=0.08,
     )
     for trace in fig.data:
@@ -381,11 +381,14 @@ h1, h2, h3, h4, h5, h6, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
 h1, .stMarkdown h1 { font-size: 2rem !important; font-weight: 800 !important; margin-bottom: 0.5rem !important; }
 h2, .stMarkdown h2 { font-size: 1.5rem !important; }
 h3, .stMarkdown h3 { font-size: 1.1875rem !important; font-weight: 600 !important; }
+
+/* Changed paragraph colors to white (--text-primary) */
 p, .stMarkdown p, .stText {
     font-size: 1rem !important;
     line-height: 1.7 !important;
-    color: var(--text-secondary) !important;
+    color: var(--text-primary) !important;
 }
+
 a { color: var(--green) !important; text-decoration: none !important; transition: all var(--transition-fast) !important; }
 a:hover { color: var(--green-hover) !important; text-decoration: underline !important; }
 
@@ -510,7 +513,7 @@ a:hover { color: var(--green-hover) !important; text-decoration: underline !impo
     border: 1px solid var(--border-default) !important; border-radius: var(--radius-md) !important;
     overflow: hidden !important; box-shadow: var(--shadow-sm) !important;
 }
-[data-testid="stDataFrame"] [data-testid="glideDataEditor"], .dvn-scroller { background-color: var(--bg-card) !important; }
+[data-testid="stDataFrame"] [data-testid="glideDataEditor"], .dvn-scroller { background-color: var(--bg-card) !important; color: var(--text-primary) !important; }
 
 [data-testid="stExpander"] {
     border: 1px solid var(--border-default) !important; border-radius: var(--radius-md) !important;
@@ -548,7 +551,9 @@ a:hover { color: var(--green-hover) !important; text-decoration: underline !impo
 [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) { background: var(--bg-elevated) !important; border: 1px solid var(--border-subtle) !important; }
 [data-testid="stChatMessage"]:hover { border-color: var(--border-default) !important; box-shadow: var(--shadow-sm) !important; }
 [data-testid="stChatMessage"] p, [data-testid="stChatMessage"] span, [data-testid="stChatMessage"] div { color: var(--text-primary) !important; }
-[data-testid="stChatMessage"] .stMarkdown p { color: var(--text-secondary) !important; font-size: 1rem !important; line-height: 1.7 !important; }
+
+/* Set chat message markdown text to pure white */
+[data-testid="stChatMessage"] .stMarkdown p { color: var(--text-primary) !important; font-size: 1rem !important; line-height: 1.7 !important; }
 
 [data-testid="stChatInput"] { border-top: 1px solid var(--border-subtle) !important; background: var(--bg-darkest) !important; padding-top: 1rem !important; }
 [data-testid="stChatInput"] textarea {
@@ -668,15 +673,16 @@ hr, .stMarkdown hr { border: none !important; border-top: 1px solid var(--border
 
 .file-pill {
     display: inline-flex; align-items: center; gap: 0.3125rem; padding: 0.375rem 0.875rem;
-    background: var(--bg-card); color: var(--text-secondary); font-size: 0.8125rem; font-weight: 500;
+    background: var(--bg-card); color: var(--text-primary); font-size: 0.8125rem; font-weight: 500;
     border-radius: var(--radius-pill); border: 1px solid var(--border-default); margin-top: 0.5rem;
 }
 
+/* Set summary text to pure white */
 .summary-card {
     background: var(--bg-elevated); border: 1px solid var(--border-subtle);
     border-left: 3px solid var(--green); border-radius: var(--radius-md);
     padding: 0.875rem 1.125rem; margin-bottom: 0.75rem;
-    font-size: 0.9375rem; color: var(--text-secondary); line-height: 1.6;
+    font-size: 0.9375rem; color: var(--text-primary) !important; line-height: 1.6;
     animation: cardFadeIn 0.3s ease;
 }
 .summary-card strong { color: var(--text-primary); }
@@ -699,7 +705,7 @@ hr, .stMarkdown hr { border: none !important; border-top: 1px solid var(--border
     text-align: left; background: var(--bg-elevated); border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md); padding: 1.25rem 1.5rem;
 }
-.ob-steps p { margin: 0 !important; font-size: 1rem !important; color: var(--text-secondary) !important; line-height: 2.2 !important; display: flex !important; align-items: baseline !important; gap: 0.625rem !important; }
+.ob-steps p { margin: 0 !important; font-size: 1rem !important; color: var(--text-primary) !important; line-height: 2.2 !important; display: flex !important; align-items: baseline !important; gap: 0.625rem !important; }
 .ob-steps strong { color: var(--text-primary) !important; font-weight: 600 !important; }
 .ob-steps a { color: var(--green) !important; }
 .ob-step-num {
@@ -713,7 +719,7 @@ hr, .stMarkdown hr { border: none !important; border-top: 1px solid var(--border
 .ob-chip {
     display: flex; align-items: center; gap: 0.4rem; padding: 0.75rem 1rem;
     background: var(--bg-elevated); border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-md); font-size: 0.875rem; color: var(--text-secondary);
+    border-radius: var(--radius-md); font-size: 0.875rem; color: var(--text-primary);
     transition: all var(--transition-base); cursor: default; font-weight: 500;
 }
 .ob-chip:hover { border-color: var(--green); background: var(--green-dim); color: var(--green); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
@@ -723,7 +729,7 @@ hr, .stMarkdown hr { border: none !important; border-top: 1px solid var(--border
     display: flex; align-items: center; justify-content: center; gap: 0.5rem;
     padding: 0.75rem 1.25rem; background: var(--bg-card); border: 1px solid var(--border-subtle);
     border-radius: var(--radius-pill); margin-bottom: 1.25rem; font-size: 0.875rem;
-    color: var(--text-tertiary); box-shadow: var(--shadow-sm); animation: cardFadeIn 0.35s ease;
+    color: var(--text-primary); box-shadow: var(--shadow-sm); animation: cardFadeIn 0.35s ease;
 }
 .ready-bar strong { color: var(--text-primary); font-weight: 600; }
 .ready-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse-dot 2s ease-in-out infinite; box-shadow: 0 0 6px var(--green-dim); }
